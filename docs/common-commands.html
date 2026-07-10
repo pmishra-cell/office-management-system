@@ -29,6 +29,39 @@
       resize: vertical;
     }
     #generalStatus { color: #4b5563; font-size: 0.92rem; }
+    .command-list {
+      list-style: disc;
+      padding-left: 22px;
+      margin: 10px 0 0;
+    }
+    .command-list li {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      margin: 10px 0;
+      line-height: 1.6;
+    }
+    .command-list code {
+      display: inline-block;
+      min-width: 320px;
+      background: #eef2f7;
+      border: 1px solid #d7dee8;
+      border-radius: 5px;
+      padding: 2px 6px;
+      color: #0f172a;
+      word-break: break-word;
+    }
+    .command-desc {
+      flex: 1;
+    }
+    .note-highlight {
+      background: #eef7ff;
+      border: 1px solid #cfe5ff;
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: #123b64;
+      margin: 10px 0;
+    }
     a { color: #0b63d8; text-decoration: none; }
     a:hover { text-decoration: underline; }
   </style>
@@ -40,6 +73,35 @@
       <p><a href="index.html">Back to Home</a></p>
       <p><a href="code-search.html">Code Search Documentation</a></p>
 
+      <h2>START</h2>
+      <p class="note-highlight"><strong>Note:</strong> You can use <code>./docs/run-local-redis.sh</code> as a single command to start Redis and the application together.</p>
+      <ul class="command-list">
+        <li>
+          <code>mvn spring-boot:run</code>
+          <span class="command-desc">Starts the Spring Boot application in default mode (no Redis-backed security stores).</span>
+        </li>
+        <li>
+          <code>docker compose -f docs/docker-compose.redis.yml up -d</code>
+          <span class="command-desc">Starts only Redis in the background when you want to run the app separately.</span>
+        </li>
+        <li>
+          <code>python3 -m http.server --cgi 8000</code>
+          <span class="command-desc">Starts the docs server with CGI enabled for the code-search page.</span>
+        </li>
+      </ul>
+
+      <h2>STOP</h2>
+      <ul class="command-list">
+        <li>
+          <code>./docs/stop-local-redis.sh</code>
+          <span class="command-desc">Stops the local Redis container started for Redis mode.</span>
+        </li>
+        <li>
+          <code>Ctrl + C</code>
+          <span class="command-desc">Stops the currently running foreground command.</span>
+        </li>
+      </ul>
+
       <h2>Serve Docs in Browser</h2>
       <pre><code>python3 -m http.server 8000</code></pre>
 
@@ -50,16 +112,6 @@
       <h2>Build and Test</h2>
       <pre><code>mvn clean package
 mvn test</code></pre>
-
-      <h2>Run Application</h2>
-      <pre><code>mvn spring-boot:run</code></pre>
-
-      <h2>Run Application With Redis Security Mode (One Command)</h2>
-      <pre><code>./docs/run-local-redis.sh</code></pre>
-      <p>This starts Redis using Docker Compose and then runs Spring Boot with the <code>local-redis</code> profile.</p>
-
-      <h2>Stop Local Redis Service</h2>
-      <pre><code>./docs/stop-local-redis.sh</code></pre>
 
       <h2>Connect to Redis CLI</h2>
       <p>First ensure Redis is running:</p>
