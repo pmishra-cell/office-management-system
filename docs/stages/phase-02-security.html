@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Phase 02 - Security Hardening</title>
+  <style>
+    body { font-family: "Segoe UI", Tahoma, sans-serif; margin: 0; background: #f7f9fc; color: #1f2937; }
+    .wrap { max-width: 960px; margin: 32px auto; padding: 0 16px; }
+    .card { background: #fff; border: 1px solid #dbe3ef; border-radius: 12px; padding: 24px; }
+    a { color: #0b63d8; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="card">
+      <h1>Phase 02: Security Hardening</h1>
+      <p><a href="index.html">Back to Stage Index</a></p>
+      <p><a href="../index.html">Back to Home</a></p>
+      <p><a href="../code-search.html">Code Search Documentation</a></p>
+      <h2>Planned Scope</h2>
+      <ul>
+        <li>Refresh token endpoint</li>
+        <li>Logout and blacklist strategy</li>
+        <li>RBAC and method-level authorization checks</li>
+        <li>Rate limiting and brute-force defenses</li>
+      </ul>
+
+      <h2>Implemented in This Phase</h2>
+      <ul>
+        <li><code>POST /api/v1/auth/refresh</code> rotates refresh token and returns a new access/refresh pair</li>
+        <li><code>POST /api/v1/auth/logout</code> revokes refresh token (in-memory blacklist)</li>
+        <li>Refresh validation enforces token type and blocks revoked tokens</li>
+        <li>JWT authentication filter enables Bearer-token based authorization on protected APIs</li>
+        <li>Role-based sample endpoints added with <code>@PreAuthorize</code> checks for EMPLOYEE, MANAGER, and ADMIN roles</li>
+        <li>Brute-force defense added: repeated failed login attempts trigger temporary account lockout with HTTP <code>429</code></li>
+        <li>Optional Redis-backed shared security state added for refresh token revocation and login-attempt lockout across multiple instances</li>
+      </ul>
+
+      <h2>Enable Redis-Backed Security State</h2>
+      <ul>
+        <li>Set <code>security.redis.enabled: true</code> in configuration</li>
+        <li>Configure Redis connection under Spring defaults (for example <code>spring.data.redis.host</code> and <code>spring.data.redis.port</code>)</li>
+        <li>Optional: customize key namespace with <code>security.redis.key-prefix</code></li>
+      </ul>
+
+      <h2>Local One-Command Validation</h2>
+      <ul>
+        <li>Start Redis + app with local profile: <code>./docs/run-local-redis.sh</code></li>
+        <li>Profile file: <code>src/main/resources/application-local-redis.yml</code></li>
+        <li>Compose file: <code>docker-compose.redis.yml</code></li>
+        <li>Stop Redis service: <code>./docs/stop-local-redis.sh</code></li>
+      </ul>
+
+      <h2>Next Security Steps</h2>
+      <ul>
+        <li>Persist revoked tokens in Redis for multi-instance deployments</li>
+        <li>Add role-based endpoint authorization with method-level guards</li>
+        <li>Add login throttling and account lockout policy</li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>

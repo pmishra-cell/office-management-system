@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Security Filter Flow - Smart Office</title>
+  <style>
+    body { font-family: "Segoe UI", Tahoma, sans-serif; margin: 0; background: #f6f8fc; color: #1f2937; }
+    .wrap { max-width: 980px; margin: 32px auto; padding: 0 16px; }
+    .card { background: #fff; border: 1px solid #dbe3ef; border-radius: 12px; padding: 24px; }
+    h1 { margin-top: 0; }
+    h2 { margin-top: 26px; border-bottom: 1px solid #dbe3ef; padding-bottom: 8px; }
+    code { background: #eef2f7; border: 1px solid #dbe3ef; border-radius: 5px; padding: 2px 6px; }
+    pre { background: #0f172a; color: #e2e8f0; border-radius: 8px; padding: 12px; overflow-x: auto; }
+    a { color: #0b63d8; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    li, p { color: #4b5563; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="card">
+      <h1>Security Filter Flow</h1>
+      <p><a href="index.html">Back to Home</a></p>
+      <p><a href="code-flow-guide.html">Back to Full Code Flow Guide</a></p>
+
+      <h2>Core Files</h2>
+      <ul>
+        <li><code>src/main/java/com/smartoffice/common/security/SecurityConfig.java</code></li>
+        <li><code>src/main/java/com/smartoffice/common/security/JwtAuthenticationFilter.java</code></li>
+        <li><code>src/main/java/com/smartoffice/security/api/SecureAccessController.java</code></li>
+        <li><code>src/main/java/com/smartoffice/auth/service/CustomUserDetailsService.java</code></li>
+      </ul>
+
+      <h2>SecurityConfig Behavior</h2>
+      <ul>
+        <li>CSRF is disabled for stateless API usage.</li>
+        <li>Session policy is stateless.</li>
+        <li>Public routes are permitted: auth endpoints, health/info, H2 console, swagger docs.</li>
+        <li><code>JwtAuthenticationFilter</code> runs before username-password filter.</li>
+      </ul>
+
+      <h2>JwtAuthenticationFilter Steps</h2>
+      <ol>
+        <li>Read <code>Authorization</code> header.</li>
+        <li>Require <code>Bearer &lt;token&gt;</code> format.</li>
+        <li>Parse token claims via <code>JwtTokenService.parseClaims</code>.</li>
+        <li>Only accept tokens with <code>type=access</code>.</li>
+        <li>Create authentication using email + <code>ROLE_*</code> authority.</li>
+        <li>Put auth object into <code>SecurityContext</code>.</li>
+        <li>Continue filter chain.</li>
+      </ol>
+
+      <h2>Role Authorization</h2>
+      <ul>
+        <li><code>/api/v1/secure/employee</code>: EMPLOYEE, MANAGER, ADMIN</li>
+        <li><code>/api/v1/secure/manager</code>: MANAGER, ADMIN</li>
+        <li><code>/api/v1/secure/admin</code>: ADMIN only</li>
+      </ul>
+
+      <h2>What Happens On Invalid Tokens</h2>
+      <ul>
+        <li>Filter ignores invalid tokens and continues.</li>
+        <li>Protected endpoint access then fails through normal security checks.</li>
+      </ul>
+
+      <h2>Verification Endpoints</h2>
+      <pre><code># Returns current authenticated principal and authorities
+GET /api/v1/secure/me
+
+# Role checks
+GET /api/v1/secure/employee
+GET /api/v1/secure/manager
+GET /api/v1/secure/admin</code></pre>
+    </section>
+  </main>
+</body>
+</html>

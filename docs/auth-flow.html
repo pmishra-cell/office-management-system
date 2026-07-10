@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Auth Flow - Smart Office</title>
+  <style>
+    body { font-family: "Segoe UI", Tahoma, sans-serif; margin: 0; background: #f6f8fc; color: #1f2937; }
+    .wrap { max-width: 980px; margin: 32px auto; padding: 0 16px; }
+    .card { background: #fff; border: 1px solid #dbe3ef; border-radius: 12px; padding: 24px; }
+    h1 { margin-top: 0; }
+    h2 { margin-top: 26px; border-bottom: 1px solid #dbe3ef; padding-bottom: 8px; }
+    h3 { margin-top: 20px; }
+    code { background: #eef2f7; border: 1px solid #dbe3ef; border-radius: 5px; padding: 2px 6px; }
+    pre { background: #0f172a; color: #e2e8f0; border-radius: 8px; padding: 12px; overflow-x: auto; }
+    pre code { background: transparent; border: none; padding: 0; color: inherit; }
+    a { color: #0b63d8; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    li, p { color: #4b5563; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="card">
+      <h1>Auth Flow</h1>
+      <p><a href="index.html">Back to Home</a></p>
+      <p><a href="code-flow-guide.html">Back to Full Code Flow Guide</a></p>
+
+      <h2>Purpose</h2>
+      <p>This page focuses only on authentication and token lifecycle behavior: register, login, refresh, and logout.</p>
+
+      <h2>Core Files</h2>
+      <ul>
+        <li><code>src/main/java/com/smartoffice/auth/api/AuthController.java</code></li>
+        <li><code>src/main/java/com/smartoffice/auth/service/AuthService.java</code></li>
+        <li><code>src/main/java/com/smartoffice/auth/service/JwtTokenService.java</code></li>
+        <li><code>src/main/java/com/smartoffice/auth/repository/UserAccountRepository.java</code></li>
+        <li><code>src/main/java/com/smartoffice/auth/domain/UserAccount.java</code></li>
+      </ul>
+
+      <h2>Register Flow</h2>
+      <ol>
+        <li><code>POST /api/v1/auth/register</code> enters <code>AuthController.register</code>.</li>
+        <li><code>AuthService.register</code> checks duplicate email.</li>
+        <li>Password is encoded with BCrypt.</li>
+        <li>User is persisted in DB.</li>
+        <li>Access and refresh JWT tokens are generated.</li>
+      </ol>
+
+      <h2>Login Flow</h2>
+      <ol>
+        <li><code>POST /api/v1/auth/login</code> enters <code>AuthController.login</code>.</li>
+        <li><code>LoginAttemptService.assertLoginAllowed</code> enforces lockout policy.</li>
+        <li>Email + password are validated.</li>
+        <li>On failure: login-attempt counters are incremented.</li>
+        <li>On success: counters are cleared and new tokens are returned.</li>
+      </ol>
+
+      <h2>Refresh Flow (Token Rotation)</h2>
+      <ol>
+        <li><code>POST /api/v1/auth/refresh</code> checks that token type is <code>refresh</code>.</li>
+        <li>Revocation store is checked.</li>
+        <li>User is loaded by token subject (email).</li>
+        <li>New access + refresh tokens are generated.</li>
+        <li>Old refresh token is revoked.</li>
+      </ol>
+
+      <h2>Logout Flow</h2>
+      <ol>
+        <li><code>POST /api/v1/auth/logout</code> validates refresh token type.</li>
+        <li>Refresh token is added to revocation store.</li>
+        <li>API returns <code>Logged out successfully</code>.</li>
+      </ol>
+
+      <h2>JWT Claims Used</h2>
+      <ul>
+        <li><code>sub</code>: user email</li>
+        <li><code>userId</code>: user id</li>
+        <li><code>role</code>: <code>EMPLOYEE</code>, <code>MANAGER</code>, <code>ADMIN</code></li>
+        <li><code>type</code>: <code>access</code> or <code>refresh</code></li>
+      </ul>
+
+      <h2>Quick Curl Sequence</h2>
+      <pre><code># Register
+curl -i -X POST http://127.0.0.1:8080/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com","name":"User","password":"StrongPass123!"}'
+
+# Login
+curl -i -X POST http://127.0.0.1:8080/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com","password":"StrongPass123!"}'</code></pre>
+    </section>
+  </main>
+</body>
+</html>

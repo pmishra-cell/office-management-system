@@ -1,0 +1,10 @@
+spring:
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+
+security:
+  redis:
+    enabled: true
+    key-prefix: smartoffice:security:local

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JwtAuthenticationFilter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">smart-office</a> &gt; <a href="index.source.html" class="el_package">com.smartoffice.common.security</a> &gt; <span class="el_source">JwtAuthenticationFilter.java</span></div><h1>JwtAuthenticationFilter.java</h1><pre class="source lang-java linenums">package com.smartoffice.common.security;
+
+import com.smartoffice.auth.service.JwtTokenService;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+import java.util.List;
+
+@Component
+@RequiredArgsConstructor
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private final JwtTokenService jwtTokenService;
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
+<span class="fc" id="L30">        String authHeader = request.getHeader(&quot;Authorization&quot;);</span>
+<span class="pc bpc" id="L31" title="1 of 4 branches missed.">        if (authHeader == null || !authHeader.startsWith(&quot;Bearer &quot;)) {</span>
+<span class="fc" id="L32">            filterChain.doFilter(request, response);</span>
+<span class="fc" id="L33">            return;</span>
+        }
+
+<span class="fc" id="L36">        String token = authHeader.substring(7).trim();</span>
+<span class="pc bpc" id="L37" title="1 of 2 branches missed.">        if (token.isEmpty()) {</span>
+<span class="nc" id="L38">            filterChain.doFilter(request, response);</span>
+<span class="nc" id="L39">            return;</span>
+        }
+
+        try {
+<span class="fc" id="L43">            Claims claims = jwtTokenService.parseClaims(token);</span>
+<span class="fc" id="L44">            String type = claims.get(&quot;type&quot;, String.class);</span>
+<span class="pc bpc" id="L45" title="1 of 2 branches missed.">            if (!&quot;access&quot;.equals(type)) {</span>
+<span class="nc" id="L46">                filterChain.doFilter(request, response);</span>
+<span class="nc" id="L47">                return;</span>
+            }
+
+<span class="fc" id="L50">            String email = claims.getSubject();</span>
+<span class="fc" id="L51">            String role = claims.get(&quot;role&quot;, String.class);</span>
+
+<span class="pc bpc" id="L53" title="3 of 6 branches missed.">            if (email != null &amp;&amp; role != null &amp;&amp; SecurityContextHolder.getContext().getAuthentication() == null) {</span>
+<span class="fc" id="L54">                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(</span>
+                        email,
+                        null,
+<span class="fc" id="L57">                        List.of(new SimpleGrantedAuthority(&quot;ROLE_&quot; + role))</span>
+                );
+<span class="fc" id="L59">                SecurityContextHolder.getContext().setAuthentication(authentication);</span>
+            }
+<span class="nc" id="L61">        } catch (JwtException | IllegalArgumentException ignored) {</span>
+            // Invalid token should not break request processing; security rules decide access.
+<span class="fc" id="L63">        }</span>
+
+<span class="fc" id="L65">        filterChain.doFilter(request, response);</span>
+<span class="fc" id="L66">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

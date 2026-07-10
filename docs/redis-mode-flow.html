@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Redis Mode Flow - Smart Office</title>
+  <style>
+    body { font-family: "Segoe UI", Tahoma, sans-serif; margin: 0; background: #f6f8fc; color: #1f2937; }
+    .wrap { max-width: 980px; margin: 32px auto; padding: 0 16px; }
+    .card { background: #fff; border: 1px solid #dbe3ef; border-radius: 12px; padding: 24px; }
+    h1 { margin-top: 0; }
+    h2 { margin-top: 26px; border-bottom: 1px solid #dbe3ef; padding-bottom: 8px; }
+    code { background: #eef2f7; border: 1px solid #dbe3ef; border-radius: 5px; padding: 2px 6px; }
+    pre { background: #0f172a; color: #e2e8f0; border-radius: 8px; padding: 12px; overflow-x: auto; }
+    a { color: #0b63d8; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    li, p { color: #4b5563; }
+    .note { border-left: 4px solid #0b63d8; background: #eef5ff; border-radius: 8px; padding: 10px 12px; color: #27415f; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="card">
+      <h1>Redis Mode Flow</h1>
+      <p><a href="index.html">Back to Home</a></p>
+      <p><a href="code-flow-guide.html">Back to Full Code Flow Guide</a></p>
+
+      <h2>Purpose</h2>
+      <p>Redis mode enables shared security state across service instances for:</p>
+      <ul>
+        <li>Refresh token revocation</li>
+        <li>Login-attempt lockout state</li>
+      </ul>
+
+      <h2>Key Files</h2>
+      <ul>
+        <li><code>docker-compose.redis.yml</code></li>
+        <li><code>src/main/resources/application-local-redis.yml</code></li>
+        <li><code>src/main/java/com/smartoffice/auth/service/store/RedisRefreshTokenRevocationStore.java</code></li>
+        <li><code>src/main/java/com/smartoffice/auth/service/store/RedisLoginAttemptStore.java</code></li>
+        <li><code>docs/run-local-redis.sh</code></li>
+        <li><code>docs/stop-local-redis.sh</code></li>
+      </ul>
+
+      <h2>Bean Selection Rules</h2>
+      <ul>
+        <li>Default: <code>security.redis.enabled=false</code> uses in-memory stores.</li>
+        <li>Redis mode: <code>security.redis.enabled=true</code> switches to Redis stores.</li>
+      </ul>
+
+      <h2>How Data Is Stored In Redis</h2>
+      <ul>
+        <li>Revoked refresh tokens: <code>&lt;key-prefix&gt;:revoked-refresh:&lt;token&gt;</code> with TTL to expiry.</li>
+        <li>Login attempts: <code>&lt;key-prefix&gt;:login-attempts:&lt;identity&gt;</code> serialized snapshot with TTL.</li>
+      </ul>
+
+      <h2>One-Command Local Run</h2>
+      <pre><code>./docs/run-local-redis.sh</code></pre>
+      <p>Script actions:</p>
+      <ol>
+        <li>Start Redis via Docker Compose</li>
+        <li>Run Spring Boot with <code>local-redis</code> profile</li>
+      </ol>
+
+      <h2>Stop Command</h2>
+      <pre><code>./docs/stop-local-redis.sh</code></pre>
+
+      <h2>Recommended Verification</h2>
+      <ol>
+        <li>Register/login to get tokens.</li>
+        <li>Call logout with refresh token.</li>
+        <li>Call refresh with same token and expect unauthorized response.</li>
+      </ol>
+
+      <div class="note">If Redis is unavailable while <code>security.redis.enabled=true</code>, startup or runtime store calls will fail. Keep Redis container running in this mode.</div>
+    </section>
+  </main>
+</body>
+</html>

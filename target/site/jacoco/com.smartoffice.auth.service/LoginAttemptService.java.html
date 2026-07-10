@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LoginAttemptService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">smart-office</a> &gt; <a href="index.source.html" class="el_package">com.smartoffice.auth.service</a> &gt; <span class="el_source">LoginAttemptService.java</span></div><h1>LoginAttemptService.java</h1><pre class="source lang-java linenums">package com.smartoffice.auth.service;
+
+import com.smartoffice.auth.service.store.LoginAttemptSnapshot;
+import com.smartoffice.auth.service.store.LoginAttemptStore;
+import com.smartoffice.common.exception.TooManyRequestsException;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import java.time.Duration;
+import java.time.Instant;
+
+@Service
+public class LoginAttemptService {
+
+    private final int maxFailedAttempts;
+    private final long attemptWindowMs;
+    private final long lockoutMs;
+    private final LoginAttemptStore loginAttemptStore;
+
+    public LoginAttemptService(
+            @Value(&quot;${security.login.max-failed-attempts:5}&quot;) int maxFailedAttempts,
+            @Value(&quot;${security.login.attempt-window-ms:900000}&quot;) long attemptWindowMs,
+            @Value(&quot;${security.login.lockout-ms:900000}&quot;) long lockoutMs,
+            LoginAttemptStore loginAttemptStore
+<span class="fc" id="L25">    ) {</span>
+<span class="fc" id="L26">        this.maxFailedAttempts = maxFailedAttempts;</span>
+<span class="fc" id="L27">        this.attemptWindowMs = attemptWindowMs;</span>
+<span class="fc" id="L28">        this.lockoutMs = lockoutMs;</span>
+<span class="fc" id="L29">        this.loginAttemptStore = loginAttemptStore;</span>
+<span class="fc" id="L30">    }</span>
+
+    public void assertLoginAllowed(String key) {
+<span class="fc" id="L33">        String normalizedKey = normalizeKey(key);</span>
+<span class="fc" id="L34">        Instant now = Instant.now();</span>
+<span class="fc" id="L35">        LoginAttemptSnapshot state = loginAttemptStore.get(normalizedKey);</span>
+<span class="fc bfc" id="L36" title="All 2 branches covered.">        if (state == null) {</span>
+<span class="fc" id="L37">            return;</span>
+        }
+
+<span class="pc bpc" id="L40" title="1 of 4 branches missed.">        if (state.lockedUntil() != null &amp;&amp; state.lockedUntil().isAfter(now)) {</span>
+<span class="fc" id="L41">            long minutesLeft = Math.max(1, Duration.between(now, state.lockedUntil()).toMinutes());</span>
+<span class="fc" id="L42">            throw new TooManyRequestsException(&quot;Too many failed login attempts. Try again in &quot; + minutesLeft + &quot; minute(s)&quot;);</span>
+        }
+
+<span class="pc bpc" id="L45" title="3 of 4 branches missed.">        if (state.lockedUntil() != null &amp;&amp; !state.lockedUntil().isAfter(now)) {</span>
+<span class="nc" id="L46">            loginAttemptStore.remove(normalizedKey);</span>
+        }
+<span class="fc" id="L48">    }</span>
+
+    public void registerFailedAttempt(String key) {
+<span class="fc" id="L51">        String normalizedKey = normalizeKey(key);</span>
+<span class="fc" id="L52">        Instant now = Instant.now();</span>
+<span class="fc" id="L53">        LoginAttemptSnapshot current = loginAttemptStore.get(normalizedKey);</span>
+
+<span class="pc bpc" id="L55" title="3 of 6 branches missed.">        if (current != null &amp;&amp; current.lockedUntil() != null &amp;&amp; current.lockedUntil().isAfter(now)) {</span>
+<span class="nc" id="L56">            return;</span>
+        }
+
+        int failedAttempts;
+        Instant firstFailureAt;
+<span class="fc" id="L61">        Instant lockedUntil = null;</span>
+
+<span class="pc bpc" id="L63" title="1 of 4 branches missed.">        if (current == null || current.firstFailureAt() == null</span>
+<span class="pc bpc" id="L64" title="1 of 2 branches missed.">                || Duration.between(current.firstFailureAt(), now).toMillis() &gt; attemptWindowMs) {</span>
+<span class="fc" id="L65">            failedAttempts = 1;</span>
+<span class="fc" id="L66">            firstFailureAt = now;</span>
+        } else {
+<span class="fc" id="L68">            failedAttempts = current.failedAttempts() + 1;</span>
+<span class="fc" id="L69">            firstFailureAt = current.firstFailureAt();</span>
+        }
+
+<span class="fc bfc" id="L72" title="All 2 branches covered.">        if (failedAttempts &gt;= maxFailedAttempts) {</span>
+<span class="fc" id="L73">            lockedUntil = now.plusMillis(lockoutMs);</span>
+        }
+
+<span class="fc" id="L76">        long ttlMs = Math.max(attemptWindowMs, lockoutMs) + attemptWindowMs;</span>
+<span class="fc" id="L77">        loginAttemptStore.put(normalizedKey, new LoginAttemptSnapshot(failedAttempts, firstFailureAt, lockedUntil), ttlMs);</span>
+<span class="fc" id="L78">    }</span>
+
+    public void registerSuccessfulLogin(String key) {
+<span class="fc" id="L81">        loginAttemptStore.remove(normalizeKey(key));</span>
+<span class="fc" id="L82">    }</span>
+
+    private String normalizeKey(String key) {
+<span class="pc bpc" id="L85" title="1 of 2 branches missed.">        return key == null ? &quot;&quot; : key.trim().toLowerCase();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Common Commands - Smart Office</title>
+  <style>
+    body { font-family: "Segoe UI", Tahoma, sans-serif; margin: 0; background: #f7f9fc; color: #1f2937; }
+    .wrap { max-width: 980px; margin: 32px auto; padding: 0 16px; }
+    .card { background: #fff; border: 1px solid #dbe3ef; border-radius: 12px; padding: 24px; }
+    h1 { margin-top: 0; }
+    h2 { margin-top: 24px; }
+    pre { background: #0f172a; color: #e2e8f0; border-radius: 8px; padding: 12px; overflow-x: auto; }
+    a { color: #0b63d8; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="card">
+      <h1>Common Commands</h1>
+      <p><a href="index.html">Back to Home</a></p>
+      <p><a href="code-search.html">Code Search Documentation</a></p>
+
+      <h2>Serve Docs in Browser</h2>
+      <pre><code>python3 -m http.server 8000</code></pre>
+
+      <h2>Serve Docs With Code Search (CGI)</h2>
+      <pre><code>python3 -m http.server --cgi 8000</code></pre>
+      <pre><code>http://127.0.0.1:8000/docs/code-search.html</code></pre>
+
+      <h2>Build and Test</h2>
+      <pre><code>mvn clean package
+mvn test</code></pre>
+
+      <h2>Run Application</h2>
+      <pre><code>mvn spring-boot:run</code></pre>
+
+      <h2>Run Application With Redis Security Mode (One Command)</h2>
+      <pre><code>./docs/run-local-redis.sh</code></pre>
+      <p>This starts Redis using Docker Compose and then runs Spring Boot with the <code>local-redis</code> profile.</p>
+
+      <h2>Stop Local Redis Service</h2>
+      <pre><code>./docs/stop-local-redis.sh</code></pre>
+
+      <h2>Curl Commands</h2>
+      <p><a href="curl-commands.html">Open Curl Commands Page</a></p>
+      <pre><code>chmod +x docs/curls.sh
+    ./docs/curls.sh</code></pre>
+
+      <h2>Manual API Calls</h2>
+      <pre><code>curl -i -X POST http://127.0.0.1:8080/api/v1/auth/register \\
+  -H "Content-Type: application/json" \\
+  -d '{"email":"alice@example.com","name":"Alice","password":"StrongPass123!"}'
+
+curl -i -X POST http://127.0.0.1:8080/api/v1/auth/login \\
+  -H "Content-Type: application/json" \\
+  -d '{"email":"alice@example.com","password":"StrongPass123!"}'</code></pre>
+
+      <h2>Open H2 Console</h2>
+      <pre><code>http://127.0.0.1:8080/h2-console</code></pre>
+      <pre><code>JDBC URL: jdbc:h2:mem:smartoffice
+User: sa
+Password: (empty)</code></pre>
+    </section>
+  </main>
+</body>
+</html>

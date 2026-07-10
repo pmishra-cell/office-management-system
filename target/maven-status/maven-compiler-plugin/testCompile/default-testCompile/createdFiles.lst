@@ -1,0 +1,7 @@
+com/smartoffice/SmartOfficeApplicationTests.class
+com/smartoffice/auth/service/store/InMemoryRefreshTokenRevocationStoreTest.class
+com/smartoffice/security/api/SecureAccessControllerIntegrationTest.class
+com/smartoffice/auth/service/LoginAttemptServiceTest.class
+com/smartoffice/auth/service/store/InMemoryLoginAttemptStoreTest.class
+com/smartoffice/auth/api/AuthControllerIntegrationTest.class
+com/smartoffice/auth/service/JwtTokenServiceTest.class

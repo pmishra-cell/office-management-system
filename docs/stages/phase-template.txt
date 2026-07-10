@@ -1,0 +1,40 @@
+Phase Template
+==============
+
+Phase Name:
+Date:
+Owner:
+
+1. Theory
+- 
+
+2. Architecture Decisions
+- 
+
+3. Folder Structure
+- 
+
+4. Why This Design
+- 
+
+5. Code Added
+- 
+
+6. Important Line Explanations
+- 
+
+7. Scale Discussion
+- How to scale to 1M users?
+- Potential bottlenecks?
+- Caching strategy?
+- Kafka strategy?
+- Index strategy?
+
+8. Interview Questions
+- 
+
+9. Validation Commands
+- 
+
+10. Next Confirmation Gate
+- 

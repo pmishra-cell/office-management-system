@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SecureAccessController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">smart-office</a> &gt; <a href="index.source.html" class="el_package">com.smartoffice.security.api</a> &gt; <span class="el_source">SecureAccessController.java</span></div><h1>SecureAccessController.java</h1><pre class="source lang-java linenums">package com.smartoffice.security.api;
+
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Map;
+
+@RestController
+@RequestMapping(&quot;/api/v1/secure&quot;)
+<span class="fc" id="L13">public class SecureAccessController {</span>
+
+    @GetMapping(&quot;/me&quot;)
+    public Map&lt;String, Object&gt; me(Authentication authentication) {
+<span class="nc" id="L17">        return Map.of(</span>
+                &quot;message&quot;, &quot;Authenticated&quot;,
+<span class="nc" id="L19">                &quot;principal&quot;, authentication.getName(),</span>
+<span class="nc" id="L20">                &quot;authorities&quot;, authentication.getAuthorities().stream().map(Object::toString).toList()</span>
+        );
+    }
+
+    @GetMapping(&quot;/employee&quot;)
+    @PreAuthorize(&quot;hasAnyRole('EMPLOYEE','MANAGER','ADMIN')&quot;)
+    public Map&lt;String, String&gt; employeeArea() {
+<span class="fc" id="L27">        return Map.of(&quot;message&quot;, &quot;Employee area access granted&quot;);</span>
+    }
+
+    @GetMapping(&quot;/manager&quot;)
+    @PreAuthorize(&quot;hasAnyRole('MANAGER','ADMIN')&quot;)
+    public Map&lt;String, String&gt; managerArea() {
+<span class="nc" id="L33">        return Map.of(&quot;message&quot;, &quot;Manager area access granted&quot;);</span>
+    }
+
+    @GetMapping(&quot;/admin&quot;)
+    @PreAuthorize(&quot;hasRole('ADMIN')&quot;)
+    public Map&lt;String, String&gt; adminArea() {
+<span class="fc" id="L39">        return Map.of(&quot;message&quot;, &quot;Admin area access granted&quot;);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

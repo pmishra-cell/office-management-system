@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rough Work Scratchpad</title>
+  <style>
+    :root {
+      --bg: #f7f8fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: #dbe3ef;
+      --accent: #0b63d8;
+      --warn: #b45309;
+    }
+
+    body {
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      margin: 0;
+      background: linear-gradient(165deg, #eef4ff 0%, var(--bg) 45%, #f8fafc 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .wrap {
+      max-width: 980px;
+      margin: 28px auto;
+      padding: 0 16px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 1.8rem;
+    }
+
+    .hint {
+      margin: 0 0 12px;
+      color: var(--muted);
+    }
+
+    .warn {
+      margin: 0 0 18px;
+      color: var(--warn);
+      font-size: 0.95rem;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .home-link {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 12px;
+      text-decoration: none;
+      font-size: 0.95rem;
+      display: inline-block;
+    }
+
+    .home-link:hover {
+      text-decoration: none;
+      filter: brightness(0.98);
+    }
+
+    .notebook-row {
+      display: grid;
+      grid-template-columns: minmax(170px, 260px) minmax(200px, 1fr) auto;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .notebook-row select,
+    .notebook-row input {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 0.95rem;
+      background: #fff;
+      color: var(--text);
+      min-width: 0;
+    }
+
+    button {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+
+    button.primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    button:hover { filter: brightness(0.98); }
+
+    textarea {
+      width: 100%;
+      min-height: 60vh;
+      resize: vertical;
+      font: 15px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      box-sizing: border-box;
+      background: #fcfdff;
+      color: var(--text);
+    }
+
+    .meta {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    @media (max-width: 700px) {
+      .meta { flex-direction: column; }
+      textarea { min-height: 50vh; }
+      .notebook-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="card">
+      <div class="topbar">
+        <h1>Rough Work Scratchpad</h1>
+        <a class="home-link" href="index.html">Back to Home</a>
+      </div>
+      <p class="hint">Write temporary notes, token lists, or quick ideas here. Content autosaves in your browser.</p>
+      <p class="warn">Security note: avoid storing real secrets (API keys/passwords) in browser local storage.</p>
+
+      <div class="notebook-row">
+        <select id="notebookList" aria-label="Select rough work notebook"></select>
+        <input id="newNotebookName" type="text" placeholder="New notebook name (for example: auth tokens)">
+        <button id="createNotebookBtn" type="button">Create Notebook</button>
+      </div>
+
+      <div class="toolbar">
+        <button id="saveBtn" class="primary" type="button">Save Now</button>
+        <button id="clearBtn" type="button">Clear Current</button>
+        <button id="renameBtn" type="button">Rename</button>
+        <button id="deleteBtn" type="button">Delete Notebook</button>
+        <button id="copyBtn" type="button">Copy All</button>
+      </div>
+
+      <textarea id="notes" placeholder="Type your rough work here..."></textarea>
+
+      <div class="meta">
+        <span id="status">Status: ready</span>
+        <span id="savedAt">Last saved: never</span>
+        <span id="activeNotebook">Notebook: default</span>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      const LEGACY_NOTES_KEY = "smartoffice.roughwork.notes.v1";
+      const LEGACY_TIME_KEY = "smartoffice.roughwork.savedAt.v1";
+      const NOTEBOOKS_KEY = "smartoffice.roughwork.notebooks.v1";
+      const ACTIVE_NOTEBOOK_KEY = "smartoffice.roughwork.activeNotebook.v1";
+      const notes = document.getElementById("notes");
+      const status = document.getElementById("status");
+      const savedAt = document.getElementById("savedAt");
+      const activeNotebook = document.getElementById("activeNotebook");
+      const notebookList = document.getElementById("notebookList");
+      const newNotebookName = document.getElementById("newNotebookName");
+      const createNotebookBtn = document.getElementById("createNotebookBtn");
+      const saveBtn = document.getElementById("saveBtn");
+      const clearBtn = document.getElementById("clearBtn");
+      const renameBtn = document.getElementById("renameBtn");
+      const deleteBtn = document.getElementById("deleteBtn");
+      const copyBtn = document.getElementById("copyBtn");
+
+      let notebooks = [];
+      let currentNotebookId = null;
+
+      function formatTime(epochMs) {
+        if (!epochMs) return "never";
+        return new Date(Number(epochMs)).toLocaleString();
+      }
+
+      function setStatus(text) {
+        status.textContent = "Status: " + text;
+      }
+
+      function uid() {
+        return "nb-" + Date.now() + "-" + Math.floor(Math.random() * 100000);
+      }
+
+      function defaultNotebook() {
+        const now = Date.now();
+        return {
+          id: uid(),
+          name: "default",
+          content: "",
+          createdAt: now,
+          savedAt: now
+        };
+      }
+
+      function migrateLegacyIfNeeded() {
+        const existing = localStorage.getItem(NOTEBOOKS_KEY);
+        if (existing) return;
+
+        const legacyContent = localStorage.getItem(LEGACY_NOTES_KEY) || "";
+        const legacySavedAt = Number(localStorage.getItem(LEGACY_TIME_KEY) || Date.now());
+        const base = defaultNotebook();
+        base.content = legacyContent;
+        base.savedAt = legacySavedAt;
+        localStorage.setItem(NOTEBOOKS_KEY, JSON.stringify([base]));
+        localStorage.setItem(ACTIVE_NOTEBOOK_KEY, base.id);
+      }
+
+      function writeState() {
+        localStorage.setItem(NOTEBOOKS_KEY, JSON.stringify(notebooks));
+        localStorage.setItem(ACTIVE_NOTEBOOK_KEY, currentNotebookId || "");
+      }
+
+      function readState() {
+        migrateLegacyIfNeeded();
+        try {
+          notebooks = JSON.parse(localStorage.getItem(NOTEBOOKS_KEY) || "[]");
+          if (!Array.isArray(notebooks)) notebooks = [];
+        } catch (_) {
+          notebooks = [];
+        }
+        if (notebooks.length === 0) {
+          notebooks = [defaultNotebook()];
+        }
+
+        const preferred = localStorage.getItem(ACTIVE_NOTEBOOK_KEY);
+        const exists = notebooks.some(function (n) { return n.id === preferred; });
+        currentNotebookId = exists ? preferred : notebooks[0].id;
+        writeState();
+      }
+
+      function currentNotebook() {
+        return notebooks.find(function (n) { return n.id === currentNotebookId; }) || notebooks[0];
+      }
+
+      function renderNotebookList() {
+        const before = currentNotebookId;
+        notebookList.innerHTML = "";
+        notebooks
+          .slice()
+          .sort(function (a, b) { return (b.savedAt || 0) - (a.savedAt || 0); })
+          .forEach(function (n) {
+            const option = document.createElement("option");
+            option.value = n.id;
+            option.textContent = n.name + " (saved " + formatTime(n.savedAt) + ")";
+            notebookList.appendChild(option);
+          });
+        notebookList.value = before;
+      }
+
+      function loadNotebook(id) {
+        currentNotebookId = id || currentNotebookId;
+        const nb = currentNotebook();
+        notes.value = nb.content || "";
+        savedAt.textContent = "Last saved: " + formatTime(nb.savedAt);
+        activeNotebook.textContent = "Notebook: " + nb.name;
+        notebookList.value = nb.id;
+        writeState();
+      }
+
+      function save() {
+        const nb = currentNotebook();
+        nb.content = notes.value;
+        const now = Date.now();
+        nb.savedAt = now;
+        renderNotebookList();
+        writeState();
+        savedAt.textContent = "Last saved: " + formatTime(now);
+        setStatus("saved");
+      }
+
+      const autoSave = function () {
+        setStatus("typing...");
+        clearTimeout(autoSave._timer);
+        autoSave._timer = setTimeout(save, 500);
+      };
+
+      function createNotebook(name) {
+        const trimmed = (name || "").trim();
+        if (!trimmed) {
+          setStatus("enter a notebook name");
+          return;
+        }
+        const already = notebooks.some(function (n) { return n.name.toLowerCase() === trimmed.toLowerCase(); });
+        if (already) {
+          setStatus("name already exists");
+          return;
+        }
+
+        const now = Date.now();
+        const nb = {
+          id: uid(),
+          name: trimmed,
+          content: "",
+          createdAt: now,
+          savedAt: now
+        };
+        notebooks.push(nb);
+        renderNotebookList();
+        loadNotebook(nb.id);
+        notes.focus();
+        setStatus("notebook created");
+      }
+
+      saveBtn.addEventListener("click", save);
+      notes.addEventListener("input", autoSave);
+      notebookList.addEventListener("change", function () {
+        loadNotebook(notebookList.value);
+        setStatus("notebook opened");
+      });
+
+      createNotebookBtn.addEventListener("click", function () {
+        createNotebook(newNotebookName.value);
+        newNotebookName.value = "";
+      });
+
+      newNotebookName.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          createNotebook(newNotebookName.value);
+          newNotebookName.value = "";
+        }
+      });
+
+      clearBtn.addEventListener("click", function () {
+        if (!confirm("Clear notes in this notebook?")) return;
+        const nb = currentNotebook();
+        nb.content = "";
+        nb.savedAt = Date.now();
+        notes.value = "";
+        renderNotebookList();
+        writeState();
+        savedAt.textContent = "Last saved: " + formatTime(nb.savedAt);
+        setStatus("current notebook cleared");
+      });
+
+      renameBtn.addEventListener("click", function () {
+        const nb = currentNotebook();
+        const next = prompt("Rename notebook", nb.name);
+        if (next == null) return;
+        const trimmed = next.trim();
+        if (!trimmed) {
+          setStatus("rename cancelled");
+          return;
+        }
+        nb.name = trimmed;
+        renderNotebookList();
+        loadNotebook(nb.id);
+        setStatus("renamed");
+      });
+
+      deleteBtn.addEventListener("click", function () {
+        if (notebooks.length <= 1) {
+          setStatus("at least one notebook is required");
+          return;
+        }
+        const nb = currentNotebook();
+        if (!confirm("Delete notebook '" + nb.name + "'?")) return;
+        notebooks = notebooks.filter(function (n) { return n.id !== nb.id; });
+        currentNotebookId = notebooks[0].id;
+        renderNotebookList();
+        loadNotebook(currentNotebookId);
+        setStatus("notebook deleted");
+      });
+
+      copyBtn.addEventListener("click", async function () {
+        try {
+          await navigator.clipboard.writeText(notes.value);
+          setStatus("copied to clipboard");
+        } catch (e) {
+          setStatus("copy failed");
+        }
+      });
+
+      readState();
+      renderNotebookList();
+      loadNotebook(currentNotebookId);
+      setStatus("ready");
+    })();
+  </script>
+</body>
+</html>

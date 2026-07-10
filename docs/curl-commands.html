@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Curl Commands - Smart Office</title>
+  <style>
+    :root {
+      --bg: #f3f7fd;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #4b5563;
+      --border: #dbe3ef;
+      --accent: #0b63d8;
+      --code: #0f172a;
+      --code-text: #e2e8f0;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at top right, #e7f0ff 0%, var(--bg) 45%, #eef3f9 100%);
+    }
+
+    .wrap { max-width: 1000px; margin: 32px auto; padding: 0 16px; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.07);
+    }
+
+    h1 { margin: 0 0 6px; }
+    h2 { margin-top: 28px; margin-bottom: 10px; }
+    p { color: var(--muted); }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .meta {
+      background: #f7faff;
+      border: 1px solid #d8e5fb;
+      border-radius: 10px;
+      padding: 10px 12px;
+      color: #294869;
+      font-size: 0.95rem;
+    }
+
+    .toolbar {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .status {
+      margin-top: 10px;
+      font-size: 0.92rem;
+      color: #24496f;
+      min-height: 1.2rem;
+    }
+
+    .cmd {
+      border: 1px solid #dde6f2;
+      border-radius: 12px;
+      background: #fff;
+      margin-top: 14px;
+      overflow: hidden;
+    }
+
+    .cmd-head {
+      background: #f8fbff;
+      border-bottom: 1px solid #dde6f2;
+      padding: 10px 12px;
+      color: #304866;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .actions {
+      display: inline-flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    pre {
+      margin: 0;
+      background: var(--code);
+      color: var(--code-text);
+      border-radius: 0;
+      border: none;
+      padding: 13px;
+      overflow-x: auto;
+    }
+
+    code {
+      font-family: "Cascadia Mono", Consolas, monospace;
+      font-size: 0.93rem;
+    }
+
+    .btn {
+      border: 1px solid #c7d6ee;
+      background: #ffffff;
+      color: #1d3d66;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 0.86rem;
+      cursor: pointer;
+    }
+
+    .btn:hover { background: #eff5ff; }
+
+    .btn-primary {
+      border-color: #0b63d8;
+      background: #0b63d8;
+      color: #fff;
+    }
+
+    .btn-primary:hover { background: #0958bf; }
+
+    .btn-danger {
+      border-color: #e4bcc4;
+      color: #8b1f33;
+      background: #fff6f7;
+    }
+
+    .editor {
+      margin-top: 16px;
+      border: 1px solid #d7e2f2;
+      border-radius: 12px;
+      padding: 14px;
+      background: #f9fcff;
+      display: none;
+    }
+
+    .editor h3 { margin: 0 0 10px; }
+
+    .editor label {
+      display: block;
+      font-weight: 600;
+      color: #23415f;
+      margin-top: 10px;
+      margin-bottom: 6px;
+    }
+
+    .editor input,
+    .editor textarea {
+      width: 100%;
+      border: 1px solid #c6d4ea;
+      border-radius: 8px;
+      padding: 9px 10px;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      font-size: 0.95rem;
+      background: #fff;
+      color: #1f2937;
+    }
+
+    .editor textarea {
+      min-height: 130px;
+      font-family: "Cascadia Mono", Consolas, monospace;
+      font-size: 0.9rem;
+      line-height: 1.4;
+      resize: vertical;
+    }
+
+    .editor-actions {
+      margin-top: 12px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .foot {
+      margin-top: 20px;
+      font-size: 0.92rem;
+      color: #5a697f;
+    }
+
+    @media (max-width: 820px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="card">
+      <h1>Curl Commands</h1>
+      <p><a href="index.html">Back to Home</a> | <a href="common-commands.html">Common Commands</a></p>
+      <p>Readable reference for API smoke-test curl commands. This is the browser-friendly version of <code>docs/curls.sh</code>.</p>
+
+      <div class="grid">
+        <div class="meta"><strong>Base URL</strong><br>http://127.0.0.1:8080</div>
+        <div class="meta"><strong>Run order</strong><br>Register -> Login -> Health -> Info</div>
+      </div>
+
+      <div class="toolbar">
+        <button id="addBtn" class="btn btn-primary" type="button">Add Command</button>
+        <button id="resetBtn" class="btn" type="button">Reset Defaults</button>
+        <button id="exportBtn" class="btn" type="button">Export JSON</button>
+        <button id="importBtn" class="btn" type="button">Import JSON</button>
+        <input id="importInput" type="file" accept="application/json" style="display: none;">
+        <span class="meta">Changes are saved in your browser local storage.</span>
+      </div>
+
+      <div id="status" class="status"></div>
+
+      <div id="editor" class="editor">
+        <h3 id="editorTitle">Add Command</h3>
+        <label for="cmdTitle">Section Title</label>
+        <input id="cmdTitle" type="text" placeholder="Example: Refresh Token">
+
+        <label for="cmdEndpoint">Endpoint/Description</label>
+        <input id="cmdEndpoint" type="text" placeholder="Example: POST /api/v1/auth/refresh">
+
+        <label for="cmdText">Command Block</label>
+        <textarea id="cmdText" placeholder="Paste curl command here"></textarea>
+
+        <div class="editor-actions">
+          <button id="saveBtn" class="btn btn-primary" type="button">Add Command</button>
+          <button id="cancelBtn" class="btn" type="button">Cancel</button>
+        </div>
+      </div>
+
+      <div id="commandList"></div>
+
+      <p class="foot">If your app is not running, start it first: <code>mvn spring-boot:run</code>.</p>
+    </section>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "smartoffice.docs.curlCommands.v1";
+    const DEFAULT_COMMANDS = [
+      {
+        title: "Register User",
+        endpoint: "POST /api/v1/auth/register",
+        command: "curl -i -X POST \"http://127.0.0.1:8080/api/v1/auth/register\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"email\": \"alice@example.com\",\n    \"name\": \"Alice\",\n    \"password\": \"StrongPass123!\"\n  }'"
+      },
+      {
+        title: "Login User",
+        endpoint: "POST /api/v1/auth/login",
+        command: "curl -i -X POST \"http://127.0.0.1:8080/api/v1/auth/login\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\n    \"email\": \"alice@example.com\",\n    \"password\": \"StrongPass123!\"\n  }'"
+      },
+      {
+        title: "Health Check",
+        endpoint: "GET /actuator/health",
+        command: "curl -i \"http://127.0.0.1:8080/actuator/health\""
+      },
+      {
+        title: "Info Endpoint",
+        endpoint: "GET /actuator/info",
+        command: "curl -i \"http://127.0.0.1:8080/actuator/info\""
+      },
+      {
+        title: "Refresh Tokens",
+        endpoint: "POST /api/v1/auth/refresh",
+        command: "curl -i -X POST \"http://127.0.0.1:8080/api/v1/auth/refresh\" \\\n+  -H \"Content-Type: application/json\" \\\n+  -d '{\n    \"refreshToken\": \"<PASTE_REFRESH_TOKEN_HERE>\"\n  }'"
+      },
+      {
+        title: "Logout (Revoke Refresh Token)",
+        endpoint: "POST /api/v1/auth/logout",
+        command: "curl -i -X POST \"http://127.0.0.1:8080/api/v1/auth/logout\" \\\n+  -H \"Content-Type: application/json\" \\\n+  -d '{\n    \"refreshToken\": \"<PASTE_REFRESH_TOKEN_HERE>\"\n  }'"
+      },
+      {
+        title: "H2 Console",
+        endpoint: "Browser URL and DB settings",
+        command: "Open: http://127.0.0.1:8080/h2-console\nJDBC URL: jdbc:h2:mem:smartoffice\nUser: sa\nPassword: (empty)"
+      },
+      {
+        title: "Run as Script (Optional)",
+        endpoint: "Terminal execution",
+        command: "chmod +x docs/curls.sh\n./docs/curls.sh"
+      }
+    ];
+
+    const commandList = document.getElementById("commandList");
+    const statusEl = document.getElementById("status");
+    const editor = document.getElementById("editor");
+    const editorTitle = document.getElementById("editorTitle");
+    const titleInput = document.getElementById("cmdTitle");
+    const endpointInput = document.getElementById("cmdEndpoint");
+    const textInput = document.getElementById("cmdText");
+    const addBtn = document.getElementById("addBtn");
+    const saveBtn = document.getElementById("saveBtn");
+    const cancelBtn = document.getElementById("cancelBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const exportBtn = document.getElementById("exportBtn");
+    const importBtn = document.getElementById("importBtn");
+    const importInput = document.getElementById("importInput");
+
+    let commands = loadCommands();
+    let editIndex = -1;
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function cloneDefaults() {
+      return JSON.parse(JSON.stringify(DEFAULT_COMMANDS));
+    }
+
+    function loadCommands() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) {
+          return cloneDefaults();
+        }
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) {
+          return cloneDefaults();
+        }
+        return parsed.filter((item) => item && item.title && item.command);
+      } catch {
+        return cloneDefaults();
+      }
+    }
+
+    function saveCommands() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(commands));
+    }
+
+    function normalizeCommands(data) {
+      if (!Array.isArray(data)) {
+        return [];
+      }
+      return data
+        .map((item) => {
+          if (!item || typeof item !== "object") {
+            return null;
+          }
+          const title = String(item.title || "").trim();
+          const endpoint = String(item.endpoint || "").trim();
+          const command = String(item.command || "").trim();
+          if (!title || !command) {
+            return null;
+          }
+          return { title, endpoint, command };
+        })
+        .filter(Boolean);
+    }
+
+    function setStatus(message) {
+      statusEl.textContent = message;
+      window.clearTimeout(setStatus.timeoutId);
+      setStatus.timeoutId = window.setTimeout(() => {
+        statusEl.textContent = "";
+      }, 2200);
+    }
+
+    async function copyText(text) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        return;
+      }
+      const el = document.createElement("textarea");
+      el.value = text;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand("copy");
+      document.body.removeChild(el);
+    }
+
+    function render() {
+      commandList.innerHTML = "";
+      commands.forEach((item, index) => {
+        const block = document.createElement("section");
+        block.innerHTML = ""
+          + "<h2>" + escapeHtml(item.title) + "</h2>"
+          + "<div class=\"cmd\">"
+          + "  <div class=\"cmd-head\">"
+          + "    <span>" + escapeHtml(item.endpoint || "Command") + "</span>"
+          + "    <div class=\"actions\">"
+          + "      <button class=\"btn\" type=\"button\" data-action=\"copy\" data-index=\"" + index + "\">Copy</button>"
+          + "      <button class=\"btn\" type=\"button\" data-action=\"edit\" data-index=\"" + index + "\">Edit</button>"
+          + "      <button class=\"btn btn-danger\" type=\"button\" data-action=\"remove\" data-index=\"" + index + "\">Remove</button>"
+          + "    </div>"
+          + "  </div>"
+          + "  <pre><code>" + escapeHtml(item.command) + "</code></pre>"
+          + "</div>";
+        commandList.appendChild(block);
+      });
+    }
+
+    function openEditor(index) {
+      editIndex = index;
+      if (index >= 0) {
+        const item = commands[index];
+        editorTitle.textContent = "Update Command";
+        saveBtn.textContent = "Update Command";
+        titleInput.value = item.title || "";
+        endpointInput.value = item.endpoint || "";
+        textInput.value = item.command || "";
+      } else {
+        editorTitle.textContent = "Add Command";
+        saveBtn.textContent = "Add Command";
+        titleInput.value = "";
+        endpointInput.value = "";
+        textInput.value = "";
+      }
+      editor.style.display = "block";
+      titleInput.focus();
+    }
+
+    function closeEditor() {
+      editor.style.display = "none";
+      editIndex = -1;
+    }
+
+    addBtn.addEventListener("click", () => openEditor(-1));
+    cancelBtn.addEventListener("click", closeEditor);
+
+    saveBtn.addEventListener("click", () => {
+      const title = titleInput.value.trim();
+      const endpoint = endpointInput.value.trim();
+      const command = textInput.value.trim();
+
+      if (!title || !command) {
+        setStatus("Title and command are required.");
+        return;
+      }
+
+      const next = { title, endpoint, command };
+      if (editIndex >= 0) {
+        commands[editIndex] = next;
+        setStatus("Command updated.");
+      } else {
+        commands.push(next);
+        setStatus("Command added.");
+      }
+
+      saveCommands();
+      render();
+      closeEditor();
+    });
+
+    resetBtn.addEventListener("click", () => {
+      if (!window.confirm("Reset commands to defaults?")) {
+        return;
+      }
+      commands = cloneDefaults();
+      saveCommands();
+      render();
+      closeEditor();
+      setStatus("Commands reset to defaults.");
+    });
+
+    exportBtn.addEventListener("click", () => {
+      const payload = {
+        exportedAt: new Date().toISOString(),
+        commands,
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const dateStamp = new Date().toISOString().slice(0, 10);
+      a.href = url;
+      a.download = "curl-commands-" + dateStamp + ".json";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setStatus("Commands exported.");
+    });
+
+    importBtn.addEventListener("click", () => {
+      importInput.click();
+    });
+
+    importInput.addEventListener("change", async () => {
+      const file = importInput.files && importInput.files[0];
+      if (!file) {
+        return;
+      }
+
+      try {
+        const text = await file.text();
+        const parsed = JSON.parse(text);
+        const source = Array.isArray(parsed) ? parsed : parsed.commands;
+        const normalized = normalizeCommands(source);
+
+        if (!normalized.length) {
+          setStatus("Import failed: no valid commands found.");
+          importInput.value = "";
+          return;
+        }
+
+        commands = normalized;
+        saveCommands();
+        render();
+        closeEditor();
+        setStatus("Commands imported.");
+      } catch {
+        setStatus("Import failed: invalid JSON file.");
+      }
+
+      importInput.value = "";
+    });
+
+    commandList.addEventListener("click", async (event) => {
+      const btn = event.target.closest("button[data-action]");
+      if (!btn) {
+        return;
+      }
+      const action = btn.getAttribute("data-action");
+      const index = Number(btn.getAttribute("data-index"));
+      if (!Number.isInteger(index) || index < 0 || index >= commands.length) {
+        return;
+      }
+
+      if (action === "copy") {
+        try {
+          await copyText(commands[index].command);
+          setStatus("Command copied.");
+        } catch {
+          setStatus("Copy failed. Please copy manually.");
+        }
+        return;
+      }
+
+      if (action === "edit") {
+        openEditor(index);
+        return;
+      }
+
+      if (action === "remove") {
+        if (!window.confirm("Remove this command?")) {
+          return;
+        }
+        commands.splice(index, 1);
+        saveCommands();
+        render();
+        setStatus("Command removed.");
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>

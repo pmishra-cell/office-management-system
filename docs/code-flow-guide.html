@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Code Flow Guide - Smart Office</title>
+  <style>
+    :root {
+      --bg: #f6f8fc;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #4b5563;
+      --border: #dbe3ef;
+      --accent: #0b63d8;
+      --code-bg: #eef2f7;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    .wrap { max-width: 1060px; margin: 32px auto; padding: 0 16px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+    }
+    h1 { margin-top: 0; }
+    h2 { margin-top: 28px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+    h3 { margin-top: 22px; }
+    p, li { color: var(--muted); }
+    ul, ol { padding-left: 22px; }
+    code {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 2px 6px;
+      font-family: Consolas, "Cascadia Mono", monospace;
+      color: #17202f;
+      font-size: 0.93em;
+    }
+    pre {
+      background: #0f172a;
+      color: #e5e7eb;
+      border-radius: 8px;
+      padding: 12px;
+      overflow-x: auto;
+      border: 1px solid #1e293b;
+    }
+    pre code {
+      background: transparent;
+      border: none;
+      color: inherit;
+      padding: 0;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .note {
+      border-left: 4px solid var(--accent);
+      background: #eef5ff;
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: #27415f;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 10px;
+      text-align: left;
+      vertical-align: top;
+      color: var(--muted);
+    }
+    th { background: #f2f6fb; color: #1f2937; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="card">
+      <h1>Smart Office Code Flow Guide</h1>
+      <p><a href="index.html">Back to Home</a></p>
+      <p>This page documents the codebase so you can trace every current flow from API request to storage and response.</p>
+
+      <h2>Focused Companion Docs</h2>
+      <ul>
+        <li><a href="auth-flow.html">Auth Flow</a></li>
+        <li><a href="security-filter-flow.html">Security Filter Flow</a></li>
+        <li><a href="redis-mode-flow.html">Redis Mode Flow</a></li>
+        <li><a href="testing-guide.html">Testing Guide</a></li>
+        <li><a href="architecture-diagram.html">Architecture Diagram</a></li>
+      </ul>
+
+      <h2>1) Current Scope</h2>
+      <ul>
+        <li>Single Spring Boot auth service with JWT-based security</li>
+        <li>Register, login, refresh, logout flows</li>
+        <li>Role-based access checks on secure endpoints</li>
+        <li>Brute-force lockout and refresh token revocation</li>
+        <li>Optional Redis-backed state for revocation/lockout</li>
+      </ul>
+
+      <h2>2) Package Overview</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Package</th>
+            <th>Responsibility</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>com.smartoffice.auth.api</code></td>
+            <td>Auth endpoints and DTOs</td>
+          </tr>
+          <tr>
+            <td><code>com.smartoffice.auth.service</code></td>
+            <td>Auth logic, JWT handling, login attempt policy, user details loading</td>
+          </tr>
+          <tr>
+            <td><code>com.smartoffice.auth.service.store</code></td>
+            <td>In-memory and Redis-backed implementations for security state</td>
+          </tr>
+          <tr>
+            <td><code>com.smartoffice.auth.domain</code></td>
+            <td>User and role entities</td>
+          </tr>
+          <tr>
+            <td><code>com.smartoffice.auth.repository</code></td>
+            <td>JPA repository for users</td>
+          </tr>
+          <tr>
+            <td><code>com.smartoffice.common.security</code></td>
+            <td>Security filter chain and JWT request filter</td>
+          </tr>
+          <tr>
+            <td><code>com.smartoffice.common.exception</code></td>
+            <td>Global API exception mapping</td>
+          </tr>
+          <tr>
+            <td><code>com.smartoffice.security.api</code></td>
+            <td>Protected sample endpoints for role validation</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>3) End-to-End Flows</h2>
+
+      <h3>3.1 Register Flow</h3>
+      <ol>
+        <li><code>POST /api/v1/auth/register</code> enters <code>AuthController.register</code>.</li>
+        <li><code>AuthService.register</code> checks duplicate email in <code>UserAccountRepository.existsByEmail</code>.</li>
+        <li>Password is BCrypt-encoded.</li>
+        <li>User is saved to DB (<code>users</code> table).</li>
+        <li><code>JwtTokenService</code> generates access + refresh token.</li>
+        <li>Returns <code>AuthResponse</code> with user metadata and tokens.</li>
+      </ol>
+
+      <h3>3.2 Login + Lockout Flow</h3>
+      <ol>
+        <li><code>POST /api/v1/auth/login</code> enters <code>AuthController.login</code>.</li>
+        <li><code>LoginAttemptService.assertLoginAllowed</code> checks if identity is currently locked.</li>
+        <li><code>AuthService.login</code> validates password.</li>
+        <li>On failure: <code>registerFailedAttempt</code> updates counters and lock state.</li>
+        <li>On success: <code>registerSuccessfulLogin</code> clears attempt state.</li>
+        <li>Returns fresh access + refresh token pair.</li>
+      </ol>
+
+      <h3>3.3 Refresh Flow (Rotation + Revocation)</h3>
+      <ol>
+        <li><code>POST /api/v1/auth/refresh</code> enters <code>AuthController.refresh</code>.</li>
+        <li><code>AuthService.refresh</code> validates token type must be <code>refresh</code>.</li>
+        <li>Checks revocation store (<code>isRefreshTokenRevoked</code>).</li>
+        <li>Loads user by email from token claims.</li>
+        <li>Generates new access + refresh token.</li>
+        <li>Revokes old refresh token (token rotation).</li>
+      </ol>
+
+      <h3>3.4 Logout Flow</h3>
+      <ol>
+        <li><code>POST /api/v1/auth/logout</code> validates refresh token type.</li>
+        <li>Refresh token is revoked using the active revocation store.</li>
+        <li>API responds with message <code>Logged out successfully</code>.</li>
+      </ol>
+
+      <h3>3.5 Protected Endpoint Authorization Flow</h3>
+      <ol>
+        <li>Request enters <code>JwtAuthenticationFilter</code>.</li>
+        <li>Filter reads <code>Authorization: Bearer &lt;token&gt;</code>.</li>
+        <li>Token is parsed, must have claim <code>type=access</code>.</li>
+        <li>Spring <code>SecurityContext</code> is populated with principal email + role authority.</li>
+        <li><code>@PreAuthorize</code> checks in <code>SecureAccessController</code> enforce role rules.</li>
+      </ol>
+
+      <h2>4) Store Selection: In-Memory vs Redis</h2>
+      <p>Store beans are selected by <code>security.redis.enabled</code>.</p>
+      <ul>
+        <li><code>false</code> (default):
+          <ul>
+            <li><code>InMemoryRefreshTokenRevocationStore</code></li>
+            <li><code>InMemoryLoginAttemptStore</code></li>
+          </ul>
+        </li>
+        <li><code>true</code>:
+          <ul>
+            <li><code>RedisRefreshTokenRevocationStore</code></li>
+            <li><code>RedisLoginAttemptStore</code></li>
+          </ul>
+        </li>
+      </ul>
+      <div class="note">Redis mode supports shared security state across multiple service instances.</div>
+
+      <h2>5) Configuration and Runtime Profiles</h2>
+      <h3>Main Config</h3>
+      <ul>
+        <li><code>src/main/resources/application.yml</code></li>
+        <li>Defines H2, JWT expiry, login lockout policy, default <code>security.redis.enabled=false</code>.</li>
+      </ul>
+
+      <h3>Local Redis Profile</h3>
+      <ul>
+        <li><code>src/main/resources/application-local-redis.yml</code></li>
+        <li>Enables Redis mode and points to <code>127.0.0.1:6379</code>.</li>
+      </ul>
+
+      <h3>Redis Infrastructure</h3>
+      <ul>
+        <li><code>docker-compose.redis.yml</code> starts local Redis container with health check.</li>
+      </ul>
+
+      <h2>6) Local Run Scripts</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Script</th>
+            <th>What It Does</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>docs/run-local-redis.sh</code></td>
+            <td>Starts Redis via compose and runs app with <code>local-redis</code> profile. Handles signal exits (130/143) as graceful termination.</td>
+          </tr>
+          <tr>
+            <td><code>docs/stop-local-redis.sh</code></td>
+            <td>Stops and removes local Redis compose resources.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>7) Exception Mapping (HTTP Behavior)</h2>
+      <ul>
+        <li><code>MethodArgumentNotValidException</code> -> <code>400</code> with field-level messages</li>
+        <li><code>BadCredentialsException</code> -> <code>401</code></li>
+        <li><code>TooManyRequestsException</code> -> <code>429</code></li>
+        <li><code>IllegalArgumentException</code> -> <code>409</code></li>
+      </ul>
+
+      <h2>8) File-by-File Map (Main Code)</h2>
+      <h3>Application Entry</h3>
+      <ul>
+        <li><code>src/main/java/com/smartoffice/SmartOfficeApplication.java</code>: Spring Boot entry point.</li>
+      </ul>
+
+      <h3>Auth API DTOs and Controller</h3>
+      <ul>
+        <li><code>src/main/java/com/smartoffice/auth/api/AuthController.java</code>: register/login/refresh/logout endpoints.</li>
+        <li><code>src/main/java/com/smartoffice/auth/api/RegisterRequest.java</code>: register input model.</li>
+        <li><code>src/main/java/com/smartoffice/auth/api/LoginRequest.java</code>: login input model.</li>
+        <li><code>src/main/java/com/smartoffice/auth/api/RefreshTokenRequest.java</code>: refresh/logout input model.</li>
+        <li><code>src/main/java/com/smartoffice/auth/api/AuthResponse.java</code>: token + user response.</li>
+        <li><code>src/main/java/com/smartoffice/auth/api/UserResponse.java</code>: user metadata response.</li>
+        <li><code>src/main/java/com/smartoffice/auth/api/MessageResponse.java</code>: simple message payload.</li>
+      </ul>
+
+      <h3>Auth Domain and Persistence</h3>
+      <ul>
+        <li><code>src/main/java/com/smartoffice/auth/domain/UserAccount.java</code>: user entity mapped to <code>users</code> table.</li>
+        <li><code>src/main/java/com/smartoffice/auth/domain/Role.java</code>: role enum (<code>EMPLOYEE</code>, <code>MANAGER</code>, <code>ADMIN</code>).</li>
+        <li><code>src/main/java/com/smartoffice/auth/repository/UserAccountRepository.java</code>: JPA repository methods for user lookup and duplication checks.</li>
+      </ul>
+
+      <h3>Auth and Security Services</h3>
+      <ul>
+        <li><code>src/main/java/com/smartoffice/auth/service/AuthService.java</code>: core auth business logic.</li>
+        <li><code>src/main/java/com/smartoffice/auth/service/JwtTokenService.java</code>: JWT issue/parse/type checks/revocation integration.</li>
+        <li><code>src/main/java/com/smartoffice/auth/service/LoginAttemptService.java</code>: lockout algorithm.</li>
+        <li><code>src/main/java/com/smartoffice/auth/service/CustomUserDetailsService.java</code>: user lookup for Spring Security auth provider.</li>
+      </ul>
+
+      <h3>Security State Store Abstractions</h3>
+      <ul>
+        <li><code>src/main/java/com/smartoffice/auth/service/store/RefreshTokenRevocationStore.java</code>: revocation interface.</li>
+        <li><code>src/main/java/com/smartoffice/auth/service/store/InMemoryRefreshTokenRevocationStore.java</code>: local revocation with expiry cleanup.</li>
+        <li><code>src/main/java/com/smartoffice/auth/service/store/RedisRefreshTokenRevocationStore.java</code>: Redis revocation with TTL keys.</li>
+        <li><code>src/main/java/com/smartoffice/auth/service/store/LoginAttemptStore.java</code>: login-attempt interface.</li>
+        <li><code>src/main/java/com/smartoffice/auth/service/store/LoginAttemptSnapshot.java</code>: immutable lockout state.</li>
+        <li><code>src/main/java/com/smartoffice/auth/service/store/InMemoryLoginAttemptStore.java</code>: local map store with TTL cleanup.</li>
+        <li><code>src/main/java/com/smartoffice/auth/service/store/RedisLoginAttemptStore.java</code>: serialized snapshot state in Redis.</li>
+      </ul>
+
+      <h3>HTTP Security and Protected Endpoints</h3>
+      <ul>
+        <li><code>src/main/java/com/smartoffice/common/security/SecurityConfig.java</code>: stateless config and route permits.</li>
+        <li><code>src/main/java/com/smartoffice/common/security/JwtAuthenticationFilter.java</code>: bearer token parsing and context setup.</li>
+        <li><code>src/main/java/com/smartoffice/security/api/SecureAccessController.java</code>: role-gated sample APIs.</li>
+      </ul>
+
+      <h3>Exception Handling</h3>
+      <ul>
+        <li><code>src/main/java/com/smartoffice/common/exception/ApiExceptionHandler.java</code>: central exception-to-response mapping.</li>
+        <li><code>src/main/java/com/smartoffice/common/exception/TooManyRequestsException.java</code>: lockout-specific exception type.</li>
+      </ul>
+
+      <h2>9) Test Map and Coverage</h2>
+      <h3>Integration Tests</h3>
+      <ul>
+        <li><code>src/test/java/com/smartoffice/auth/api/AuthControllerIntegrationTest.java</code></li>
+        <li><code>src/test/java/com/smartoffice/security/api/SecureAccessControllerIntegrationTest.java</code></li>
+        <li><code>src/test/java/com/smartoffice/SmartOfficeApplicationTests.java</code></li>
+      </ul>
+
+      <h3>Unit Tests</h3>
+      <ul>
+        <li><code>src/test/java/com/smartoffice/auth/service/JwtTokenServiceTest.java</code></li>
+        <li><code>src/test/java/com/smartoffice/auth/service/LoginAttemptServiceTest.java</code></li>
+        <li><code>src/test/java/com/smartoffice/auth/service/store/InMemoryRefreshTokenRevocationStoreTest.java</code></li>
+        <li><code>src/test/java/com/smartoffice/auth/service/store/InMemoryLoginAttemptStoreTest.java</code></li>
+      </ul>
+
+      <h3>Coverage Commands (JaCoCo)</h3>
+      <pre><code>mvn clean verify
+
+# Open HTML report
+target/site/jacoco/index.html</code></pre>
+
+      <h2>10) Suggested Reading Order</h2>
+      <ol>
+        <li><code>auth/api/AuthController</code></li>
+        <li><code>auth/service/AuthService</code></li>
+        <li><code>auth/service/JwtTokenService</code> and store implementations</li>
+        <li><code>common/security/JwtAuthenticationFilter</code> and <code>SecurityConfig</code></li>
+        <li><code>security/api/SecureAccessController</code></li>
+        <li>Integration tests, then unit tests</li>
+      </ol>
+    </section>
+  </main>
+</body>
+</html>

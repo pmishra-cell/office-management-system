@@ -1,0 +1,39 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:smartoffice;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  h2:
+    console:
+      enabled: true
+
+server:
+  port: 8080
+
+jwt:
+  secret: change-me-in-production-please-use-a-long-random-string
+  access-token-expiration-ms: 900000
+  refresh-token-expiration-ms: 604800000
+
+security:
+  redis:
+    enabled: false
+    key-prefix: smartoffice:security
+  login:
+    max-failed-attempts: 5
+    attempt-window-ms: 900000
+    lockout-ms: 900000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

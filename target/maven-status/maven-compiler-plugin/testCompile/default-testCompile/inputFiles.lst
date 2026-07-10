@@ -1,0 +1,7 @@
+/workspaces/codespaces-blank/src/test/java/com/smartoffice/SmartOfficeApplicationTests.java
+/workspaces/codespaces-blank/src/test/java/com/smartoffice/auth/api/AuthControllerIntegrationTest.java
+/workspaces/codespaces-blank/src/test/java/com/smartoffice/auth/service/JwtTokenServiceTest.java
+/workspaces/codespaces-blank/src/test/java/com/smartoffice/auth/service/LoginAttemptServiceTest.java
+/workspaces/codespaces-blank/src/test/java/com/smartoffice/auth/service/store/InMemoryLoginAttemptStoreTest.java
+/workspaces/codespaces-blank/src/test/java/com/smartoffice/auth/service/store/InMemoryRefreshTokenRevocationStoreTest.java
+/workspaces/codespaces-blank/src/test/java/com/smartoffice/security/api/SecureAccessControllerIntegrationTest.java

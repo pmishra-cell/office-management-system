@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Testing Guide - Smart Office</title>
+  <style>
+    body { font-family: "Segoe UI", Tahoma, sans-serif; margin: 0; background: #f6f8fc; color: #1f2937; }
+    .wrap { max-width: 980px; margin: 32px auto; padding: 0 16px; }
+    .card { background: #fff; border: 1px solid #dbe3ef; border-radius: 12px; padding: 24px; }
+    h1 { margin-top: 0; }
+    h2 { margin-top: 26px; border-bottom: 1px solid #dbe3ef; padding-bottom: 8px; }
+    code { background: #eef2f7; border: 1px solid #dbe3ef; border-radius: 5px; padding: 2px 6px; }
+    pre { background: #0f172a; color: #e2e8f0; border-radius: 8px; padding: 12px; overflow-x: auto; }
+    pre code { background: transparent; border: none; padding: 0; color: inherit; }
+    a { color: #0b63d8; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    li, p { color: #4b5563; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="card">
+      <h1>Testing Guide</h1>
+      <p><a href="index.html">Back to Home</a></p>
+      <p><a href="code-flow-guide.html">Back to Full Code Flow Guide</a></p>
+
+      <h2>Test Types</h2>
+      <h3>Integration Tests</h3>
+      <ul>
+        <li><code>src/test/java/com/smartoffice/auth/api/AuthControllerIntegrationTest.java</code></li>
+        <li><code>src/test/java/com/smartoffice/security/api/SecureAccessControllerIntegrationTest.java</code></li>
+        <li><code>src/test/java/com/smartoffice/SmartOfficeApplicationTests.java</code></li>
+      </ul>
+
+      <h3>Unit Tests</h3>
+      <ul>
+        <li><code>src/test/java/com/smartoffice/auth/service/JwtTokenServiceTest.java</code></li>
+        <li><code>src/test/java/com/smartoffice/auth/service/LoginAttemptServiceTest.java</code></li>
+        <li><code>src/test/java/com/smartoffice/auth/service/store/InMemoryRefreshTokenRevocationStoreTest.java</code></li>
+        <li><code>src/test/java/com/smartoffice/auth/service/store/InMemoryLoginAttemptStoreTest.java</code></li>
+      </ul>
+
+      <h2>What Is Covered</h2>
+      <ul>
+        <li>Register/login/refresh/logout API flows</li>
+        <li>Refresh token rotation and revocation</li>
+        <li>Lockout policy and 429 behavior</li>
+        <li>Role-based endpoint authorization</li>
+        <li>JWT token claim/type behavior</li>
+        <li>In-memory store expiration and CRUD semantics</li>
+      </ul>
+
+      <h2>Run Tests</h2>
+      <pre><code>mvn test</code></pre>
+
+      <h2>Run Coverage (JaCoCo)</h2>
+      <pre><code>mvn clean verify</code></pre>
+      <p>Coverage report output:</p>
+      <ul>
+        <li><code>target/site/jacoco/index.html</code></li>
+        <li><code>target/site/jacoco/jacoco.xml</code></li>
+        <li><code>target/site/jacoco/jacoco.csv</code></li>
+      </ul>
+
+      <h2>Testing Notes</h2>
+      <ul>
+        <li>Integration tests use Spring Boot test context with in-memory DB defaults.</li>
+        <li>Redis-specific behavior is implemented through conditional stores and can be manually verified using local Redis profile scripts.</li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>
