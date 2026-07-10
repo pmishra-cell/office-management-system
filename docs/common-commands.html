@@ -43,6 +43,24 @@ mvn test</code></pre>
       <h2>Stop Local Redis Service</h2>
       <pre><code>./docs/stop-local-redis.sh</code></pre>
 
+      <h2>Connect to Redis CLI</h2>
+      <p>First ensure Redis is running:</p>
+      <pre><code>docker compose -f docs/docker-compose.redis.yml up -d</code></pre>
+
+      <p>If <code>redis-cli</code> is installed on your host:</p>
+      <pre><code>redis-cli -h 127.0.0.1 -p 6379</code></pre>
+
+      <p>If <code>redis-cli</code> is not installed (recommended fallback):</p>
+      <pre><code>docker exec -it smartoffice-redis redis-cli</code></pre>
+
+      <p>Quick connectivity check:</p>
+      <pre><code>PING
+    KEYS smartoffice:security*</code></pre>
+
+      <p>See all data and key count:</p>
+      <pre><code>SCAN 0 COUNT 100
+    DBSIZE</code></pre>
+
       <h2>Curl Commands</h2>
       <p><a href="curl-commands.html">Open Curl Commands Page</a></p>
       <pre><code>chmod +x docs/curls.sh

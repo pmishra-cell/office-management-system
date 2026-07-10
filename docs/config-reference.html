@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Configuration Reference - Smart Office</title>
+  <style>
+    body { font-family: "Segoe UI", Tahoma, sans-serif; margin: 0; background: #f7f9fc; color: #1f2937; }
+    .wrap { max-width: 980px; margin: 32px auto; padding: 0 16px; }
+    .card { background: #fff; border: 1px solid #dbe3ef; border-radius: 12px; padding: 24px; }
+    h1 { margin-top: 0; }
+    h2 { margin-top: 24px; border-bottom: 1px solid #dbe3ef; padding-bottom: 8px; }
+    p, li { color: #4b5563; }
+    ul { padding-left: 22px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { border: 1px solid #dbe3ef; padding: 10px; text-align: left; vertical-align: top; }
+    th { background: #f2f6fb; }
+    code { background: #eef2f7; border: 1px solid #dbe3ef; border-radius: 5px; padding: 2px 6px; font-family: Consolas, "Cascadia Mono", monospace; }
+    pre { background: #0f172a; color: #e2e8f0; border-radius: 8px; padding: 12px; overflow-x: auto; border: 1px solid #1e293b; }
+    a { color: #0b63d8; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="card">
+      <h1>Configuration and Profiles Reference</h1>
+      <p><a href="index.html">Back to Home</a></p>
+      <p>This page maps configuration keys to behavior so you can understand what changes when values are updated.</p>
+
+      <h2>Primary Config Files</h2>
+      <ul>
+        <li><code>src/main/resources/application.yml</code>: default local runtime</li>
+        <li><code>src/main/resources/application-local-redis.yml</code>: enables Redis-backed security state</li>
+      </ul>
+
+      <h2>Core Keys</h2>
+      <table>
+        <thead>
+          <tr><th>Key</th><th>Default</th><th>Effect</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>server.port</code></td><td><code>8080</code></td><td>HTTP port for the service.</td></tr>
+          <tr><td><code>jwt.secret</code></td><td>development placeholder</td><td>Signing key used by JWT generation and verification.</td></tr>
+          <tr><td><code>jwt.access-token-expiration-ms</code></td><td><code>900000</code></td><td>Access token lifetime in milliseconds.</td></tr>
+          <tr><td><code>jwt.refresh-token-expiration-ms</code></td><td><code>604800000</code></td><td>Refresh token lifetime in milliseconds.</td></tr>
+          <tr><td><code>security.redis.enabled</code></td><td><code>false</code></td><td>Selects in-memory or Redis implementations for revocation and login-attempt state.</td></tr>
+          <tr><td><code>security.redis.key-prefix</code></td><td><code>smartoffice:security</code></td><td>Prefix used for Redis keys.</td></tr>
+          <tr><td><code>security.login.max-failed-attempts</code></td><td><code>5</code></td><td>Threshold before lockout is applied.</td></tr>
+          <tr><td><code>security.login.attempt-window-ms</code></td><td><code>900000</code></td><td>Time window for counting failed login attempts.</td></tr>
+          <tr><td><code>security.login.lockout-ms</code></td><td><code>900000</code></td><td>Lockout duration after threshold is reached.</td></tr>
+          <tr><td><code>management.endpoints.web.exposure.include</code></td><td><code>health,info,metrics</code></td><td>Actuator endpoints exposed over HTTP.</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Default Data and DB Setup</h2>
+      <ul>
+        <li>H2 in-memory DB: <code>jdbc:h2:mem:smartoffice</code></li>
+        <li>Hibernate DDL mode: <code>update</code></li>
+        <li>H2 console enabled: <code>/h2-console</code></li>
+      </ul>
+
+      <h2>Redis Profile Behavior</h2>
+      <p>When the local redis profile config is active:</p>
+      <ul>
+        <li>Redis host: <code>127.0.0.1</code>, port: <code>6379</code></li>
+        <li><code>security.redis.enabled=true</code></li>
+        <li>State persists outside the JVM process</li>
+      </ul>
+
+      <h2>Run Examples</h2>
+      <pre><code># default mode (in-memory security state)
+mvn spring-boot:run
+
+# redis mode via helper script
+./docs/run-local-redis.sh</code></pre>
+
+      <h2>Production Notes</h2>
+      <ul>
+        <li>Use a strong <code>jwt.secret</code> from environment variables or secret manager.</li>
+        <li>Disable H2 console in non-development environments.</li>
+        <li>Prefer Redis mode if running multiple instances.</li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>

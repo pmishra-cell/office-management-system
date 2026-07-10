@@ -8,7 +8,7 @@ ROOT_DIR="$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)"
 cd "$ROOT_DIR"
 
 echo "Starting Redis service via Docker Compose..."
-docker compose -f docker-compose.redis.yml up -d
+docker compose -f docs/docker-compose.redis.yml up -d
 
 echo "Running app with local-redis profile..."
 if mvn spring-boot:run -Dspring-boot.run.profiles=local-redis; then

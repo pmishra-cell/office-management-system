@@ -8,4 +8,4 @@ ROOT_DIR="$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)"
 cd "$ROOT_DIR"
 
 echo "Stopping Redis service..."
-docker compose -f docker-compose.redis.yml down
+docker compose -f docs/docker-compose.redis.yml down

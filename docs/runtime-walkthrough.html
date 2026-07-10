@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Runtime Walkthrough - Smart Office</title>
+  <style>
+    :root {
+      --bg: #f6f8fc;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #4b5563;
+      --border: #dbe3ef;
+      --accent: #0b63d8;
+      --code-bg: #eef2f7;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    .wrap { max-width: 1020px; margin: 32px auto; padding: 0 16px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+    }
+    h1 { margin-top: 0; }
+    h2 { margin-top: 26px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+    h3 { margin-top: 20px; }
+    p, li { color: var(--muted); }
+    ul, ol { padding-left: 22px; }
+    code {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 2px 6px;
+      font-family: Consolas, "Cascadia Mono", monospace;
+      font-size: 0.93em;
+      color: #17202f;
+    }
+    pre {
+      background: #0f172a;
+      color: #e5e7eb;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 12px;
+      overflow-x: auto;
+    }
+    pre code { background: transparent; border: none; color: inherit; padding: 0; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .note {
+      border-left: 4px solid var(--accent);
+      background: #eef5ff;
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: #27415f;
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="card">
+      <h1>Runtime Walkthrough</h1>
+      <p><a href="index.html">Back to Home</a></p>
+      <p>This page explains what happens at runtime from request entry to security checks and state storage.</p>
+
+      <h2>Application Startup</h2>
+      <ol>
+        <li>Spring Boot starts and loads <code>application.yml</code>.</li>
+        <li>Security chain is built in <code>SecurityConfig</code>.</li>
+        <li>Store beans are selected by <code>security.redis.enabled</code>.</li>
+        <li>JPA initializes the <code>users</code> table from <code>UserAccount</code>.</li>
+      </ol>
+
+      <h2>Request Pipeline</h2>
+      <ol>
+        <li>HTTP request reaches Spring MVC.</li>
+        <li><code>JwtAuthenticationFilter</code> runs before username/password filter.</li>
+        <li>If bearer token exists and is valid access token, auth is loaded into SecurityContext.</li>
+        <li>Controller method executes.</li>
+        <li>On errors, <code>ApiExceptionHandler</code> converts exceptions to JSON responses.</li>
+      </ol>
+
+      <h2>Auth Flows</h2>
+      <h3>Register</h3>
+      <ol>
+        <li><code>POST /api/v1/auth/register</code></li>
+        <li>Duplicate email check via repository.</li>
+        <li>Password hashed with BCrypt.</li>
+        <li>User saved and token pair returned.</li>
+      </ol>
+
+      <h3>Login</h3>
+      <ol>
+        <li><code>LoginAttemptService.assertLoginAllowed</code> enforces lockout policy.</li>
+        <li>Credential check against stored password hash.</li>
+        <li>Success clears attempt state; failure increments and can lock account.</li>
+      </ol>
+
+      <h3>Refresh and Logout</h3>
+      <ol>
+        <li>Refresh token must have claim <code>type=refresh</code>.</li>
+        <li>Revocation store is checked.</li>
+        <li>Refresh rotates token and revokes previous one.</li>
+        <li>Logout revokes the supplied refresh token.</li>
+      </ol>
+
+      <h2>Role Authorization</h2>
+      <ul>
+        <li><code>/api/v1/secure/me</code>: authenticated users</li>
+        <li><code>/api/v1/secure/employee</code>: EMPLOYEE, MANAGER, ADMIN</li>
+        <li><code>/api/v1/secure/manager</code>: MANAGER, ADMIN</li>
+        <li><code>/api/v1/secure/admin</code>: ADMIN only</li>
+      </ul>
+
+      <h2>Security State Storage</h2>
+      <h3>In-Memory Mode</h3>
+      <p>Enabled when <code>security.redis.enabled=false</code> (default). State lives in process memory and is lost on restart.</p>
+
+      <h3>Redis Mode</h3>
+      <p>Enabled when <code>security.redis.enabled=true</code>. State is shared through Redis keys:</p>
+      <ul>
+        <li><code>{key-prefix}:login-attempts:{normalized-email}</code></li>
+        <li><code>{key-prefix}:revoked-refresh:{refresh-token}</code></li>
+      </ul>
+
+      <h2>Source Anchors</h2>
+      <ul>
+        <li><code>src/main/java/com/smartoffice/common/security/SecurityConfig.java</code></li>
+        <li><code>src/main/java/com/smartoffice/common/security/JwtAuthenticationFilter.java</code></li>
+        <li><code>src/main/java/com/smartoffice/auth/service/AuthService.java</code></li>
+        <li><code>src/main/java/com/smartoffice/auth/service/LoginAttemptService.java</code></li>
+        <li><code>src/main/java/com/smartoffice/common/exception/ApiExceptionHandler.java</code></li>
+      </ul>
+
+      <div class="note">
+        Use this page together with the flow diagrams for both conceptual understanding and concrete runtime behavior.
+      </div>
+    </section>
+  </main>
+</body>
+</html>

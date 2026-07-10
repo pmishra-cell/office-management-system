@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>API and Errors Reference - Smart Office</title>
+  <style>
+    body { font-family: "Segoe UI", Tahoma, sans-serif; margin: 0; background: #f7f9fc; color: #1f2937; }
+    .wrap { max-width: 1040px; margin: 32px auto; padding: 0 16px; }
+    .card { background: #fff; border: 1px solid #dbe3ef; border-radius: 12px; padding: 24px; }
+    h1 { margin-top: 0; }
+    h2 { margin-top: 24px; border-bottom: 1px solid #dbe3ef; padding-bottom: 8px; }
+    p, li { color: #4b5563; }
+    ul, ol { padding-left: 22px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { border: 1px solid #dbe3ef; padding: 10px; text-align: left; vertical-align: top; }
+    th { background: #f2f6fb; }
+    code { background: #eef2f7; border: 1px solid #dbe3ef; border-radius: 5px; padding: 2px 6px; font-family: Consolas, "Cascadia Mono", monospace; }
+    pre { background: #0f172a; color: #e2e8f0; border-radius: 8px; padding: 12px; overflow-x: auto; border: 1px solid #1e293b; }
+    a { color: #0b63d8; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="card">
+      <h1>API and Errors Reference</h1>
+      <p><a href="index.html">Back to Home</a></p>
+      <p>This page gives a quick endpoint map and expected error behavior from the global exception handler.</p>
+
+      <h2>Public Endpoints</h2>
+      <table>
+        <thead>
+          <tr><th>Method</th><th>Path</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>POST</code></td><td><code>/api/v1/auth/register</code></td><td>Create user and return tokens.</td></tr>
+          <tr><td><code>POST</code></td><td><code>/api/v1/auth/login</code></td><td>Authenticate and return tokens.</td></tr>
+          <tr><td><code>POST</code></td><td><code>/api/v1/auth/refresh</code></td><td>Rotate refresh token and issue new access token.</td></tr>
+          <tr><td><code>POST</code></td><td><code>/api/v1/auth/logout</code></td><td>Revoke refresh token.</td></tr>
+          <tr><td><code>GET</code></td><td><code>/actuator/health</code></td><td>Health endpoint (permit all).</td></tr>
+          <tr><td><code>GET</code></td><td><code>/actuator/info</code></td><td>Info endpoint (permit all).</td></tr>
+          <tr><td><code>GET</code></td><td><code>/h2-console/**</code></td><td>Local DB console.</td></tr>
+          <tr><td><code>GET</code></td><td><code>/swagger-ui/**</code>, <code>/v3/api-docs/**</code></td><td>OpenAPI docs endpoints.</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Protected Endpoints</h2>
+      <table>
+        <thead>
+          <tr><th>Method</th><th>Path</th><th>Required Authority</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>GET</code></td><td><code>/api/v1/secure/me</code></td><td>Authenticated token</td></tr>
+          <tr><td><code>GET</code></td><td><code>/api/v1/secure/employee</code></td><td><code>ROLE_EMPLOYEE</code> or above</td></tr>
+          <tr><td><code>GET</code></td><td><code>/api/v1/secure/manager</code></td><td><code>ROLE_MANAGER</code> or <code>ROLE_ADMIN</code></td></tr>
+          <tr><td><code>GET</code></td><td><code>/api/v1/secure/admin</code></td><td><code>ROLE_ADMIN</code></td></tr>
+        </tbody>
+      </table>
+
+      <h2>Token Rules</h2>
+      <ul>
+        <li>Security filter accepts only <code>Authorization: Bearer &lt;access-token&gt;</code> for endpoint authorization.</li>
+        <li>Refresh token is accepted only by refresh/logout APIs and must carry claim <code>type=refresh</code>.</li>
+      </ul>
+
+      <h2>Error Mapping</h2>
+      <table>
+        <thead>
+          <tr><th>Condition</th><th>Status</th><th>Error</th><th>Source</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Validation failure on request body</td><td><code>400</code></td><td><code>Validation failed</code></td><td><code>MethodArgumentNotValidException</code></td></tr>
+          <tr><td>Invalid credentials or token misuse</td><td><code>401</code></td><td><code>Unauthorized</code></td><td><code>BadCredentialsException</code></td></tr>
+          <tr><td>Too many failed login attempts</td><td><code>429</code></td><td><code>Too Many Requests</code></td><td><code>TooManyRequestsException</code></td></tr>
+          <tr><td>Conflict conditions like duplicate email</td><td><code>409</code></td><td><code>Conflict</code></td><td><code>IllegalArgumentException</code></td></tr>
+        </tbody>
+      </table>
+
+      <h2>Sample Protected Call</h2>
+      <pre><code>curl -i http://127.0.0.1:8080/api/v1/secure/me \
+  -H "Authorization: Bearer &lt;accessToken&gt;"</code></pre>
+
+      <h2>Source Anchors</h2>
+      <ul>
+        <li><code>src/main/java/com/smartoffice/auth/api/AuthController.java</code></li>
+        <li><code>src/main/java/com/smartoffice/security/api/SecureAccessController.java</code></li>
+        <li><code>src/main/java/com/smartoffice/common/security/SecurityConfig.java</code></li>
+        <li><code>src/main/java/com/smartoffice/common/exception/ApiExceptionHandler.java</code></li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>
