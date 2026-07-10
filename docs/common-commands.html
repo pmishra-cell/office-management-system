@@ -62,6 +62,15 @@
       color: #123b64;
       margin: 10px 0;
     }
+    .warning-highlight {
+      background: #fff4e5;
+      border: 1px solid #ffd7a8;
+      border-left: 4px solid #d97706;
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: #7c2d12;
+      margin: 10px 0;
+    }
     a { color: #0b63d8; text-decoration: none; }
     a:hover { text-decoration: underline; }
   </style>
@@ -127,7 +136,7 @@ mvn test</code></pre>
       <pre><code>PING
     KEYS smartoffice:security*</code></pre>
 
-      <p><strong>Warning:</strong> avoid <code>KEYS *</code> on large or production datasets. It scans the full keyspace and can impact Redis performance. Prefer <code>SCAN</code>.</p>
+      <p class="warning-highlight"><strong>Warning:</strong> Avoid <code>KEYS *</code> on large or production datasets. It scans the full keyspace and can impact Redis performance. Prefer <code>SCAN</code>.</p>
 
       <p>See all data and key count:</p>
       <pre><code>SCAN 0 COUNT 100
