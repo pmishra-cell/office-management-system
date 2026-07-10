@@ -12,12 +12,25 @@
     a { color: #0b63d8; text-decoration: none; }
     a:hover { text-decoration: underline; }
     ul { line-height: 1.8; }
-    .link-highlight {
-      background: #eef7ff;
-      border: 1px solid #cfe5ff;
+    .link-highlight-1,
+    .link-highlight-2,
+    .link-highlight-3,
+    .link-highlight-4,
+    .link-highlight-5 {
       border-radius: 8px;
       padding: 2px 8px;
       display: inline-block;
+    }
+    .link-highlight-1 { background: #eef7ff; border: 1px solid #cfe5ff; }
+    .link-highlight-2 { background: #f1faee; border: 1px solid #cde8c8; }
+    .link-highlight-3 { background: #fff7e8; border: 1px solid #ffe2b8; }
+    .link-highlight-4 { background: #f7f0ff; border: 1px solid #e4d3ff; }
+    .link-highlight-5 { background: #ffeef4; border: 1px solid #ffd1de; }
+    .point-icon {
+      vertical-align: middle;
+      margin-right: 6px;
+      font-size: 16px;
+      line-height: 1;
     }
     code { background: #eef2f7; border: 1px solid #d7dee8; border-radius: 5px; padding: 2px 6px; }
   </style>
@@ -31,17 +44,18 @@
 
       <h2>Pages</h2>
       <ul>
+        <li><a class="link-highlight-1" href="start-here.html"><span class="point-icon" aria-hidden="true">&#x1F449;</span>Start Here</a></li>
         <li><a href="api-and-errors-reference.html">API and Errors Reference</a></li>
         <li><a href="architecture-diagram.html">Architecture Diagram</a></li>
         <li><a href="auth-flow.html">Auth Flow</a></li>
         <li><a href="code-flow-guide.html">Code Flow Guide</a></li>
-        <li><a href="code-search.html">Code Search Tracker</a></li>
-        <li><a class="link-highlight" href="common-commands.html">Common Commands</a></li>
+        <li><a class="link-highlight-2" href="code-search.html">Code Search Tracker</a></li>
+        <li><a class="link-highlight-3" href="common-commands.html">Common Commands</a></li>
         <li><a href="config-reference.html">Configuration Reference</a></li>
-        <li><a class="link-highlight" href="curl-commands.html">Curl Commands</a></li>
+        <li><a class="link-highlight-4" href="curl-commands.html">Curl Commands</a></li>
         <li><a href="dev-usage.html">Developer Usage Guide</a></li>
         <li><a href="redis-mode-flow.html">Redis Mode Flow</a></li>
-        <li><a class="link-highlight" href="rough-work.html">Rough Work Scratchpad</a></li>
+        <li><a class="link-highlight-5" href="rough-work.html">Rough Work Scratchpad</a></li>
         <li><a href="runtime-walkthrough.html">Runtime Walkthrough</a></li>
         <li><a href="security-filter-flow.html">Security Filter Flow</a></li>
         <li><a href="stages/index.html">Stage-wise Docs</a></li>

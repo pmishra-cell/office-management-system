@@ -1,0 +1,2 @@
+mvn clean package -DskipTests=true ---: Build without test cases
+https://literate-space-telegram-r7ggvp5r59vpf5jw5-8000.app.github.dev/docs/ ---: Git URL 10/07/2026

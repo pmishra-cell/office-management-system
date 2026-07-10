@@ -11,6 +11,24 @@
     h1 { margin-top: 0; }
     h2 { margin-top: 24px; }
     pre { background: #0f172a; color: #e2e8f0; border-radius: 8px; padding: 12px; overflow-x: auto; }
+    .general-tools { display: flex; gap: 10px; flex-wrap: wrap; margin: 8px 0; }
+    .general-tools button { border: 1px solid #dbe3ef; background: #fff; color: #1f2937; border-radius: 8px; padding: 8px 12px; cursor: pointer; }
+    .general-tools button:hover { filter: brightness(0.98); }
+    #generalCommands {
+      width: 100%;
+      min-height: 180px;
+      border: 1px solid #dbe3ef;
+      border-radius: 8px;
+      padding: 12px;
+      box-sizing: border-box;
+      font-family: Consolas, "Cascadia Mono", monospace;
+      font-size: 14px;
+      line-height: 1.5;
+      background: #fcfdff;
+      color: #1f2937;
+      resize: vertical;
+    }
+    #generalStatus { color: #4b5563; font-size: 0.92rem; }
     a { color: #0b63d8; text-decoration: none; }
     a:hover { text-decoration: underline; }
   </style>
@@ -57,9 +75,18 @@ mvn test</code></pre>
       <pre><code>PING
     KEYS smartoffice:security*</code></pre>
 
+      <p><strong>Warning:</strong> avoid <code>KEYS *</code> on large or production datasets. It scans the full keyspace and can impact Redis performance. Prefer <code>SCAN</code>.</p>
+
       <p>See all data and key count:</p>
       <pre><code>SCAN 0 COUNT 100
+    SCAN 0 MATCH smartoffice:security* COUNT 100
     DBSIZE</code></pre>
+
+      <p>Inspect a specific key:</p>
+      <pre><code>TYPE smartoffice:security:local:login-attempts:alice@example.com
+    GET smartoffice:security:local:login-attempts:alice@example.com
+    TTL smartoffice:security:local:login-attempts:alice@example.com
+    PTTL smartoffice:security:local:login-attempts:alice@example.com</code></pre>
 
       <h2>Curl Commands</h2>
       <p><a href="curl-commands.html">Open Curl Commands Page</a></p>
@@ -80,7 +107,84 @@ curl -i -X POST http://127.0.0.1:8080/api/v1/auth/login \\
       <pre><code>JDBC URL: jdbc:h2:mem:smartoffice
 User: sa
 Password: (empty)</code></pre>
+
+      <h2>General</h2>
+      <p>Use this section to keep any manual commands that are not specific to Redis.</p>
+      <p>Stored in file: <code>docs/txt/general-commands.txt</code> (via <code>/cgi-bin/general_commands.py</code>)</p>
+      <div class="general-tools">
+        <button id="saveGeneralBtn" type="button">Save</button>
+        <button id="clearGeneralBtn" type="button">Clear</button>
+        <span id="generalStatus">Ready</span>
+      </div>
+      <textarea id="generalCommands" spellcheck="false" placeholder="# Add your own general commands below
+# Example:
+# mvn -q -DskipTests package
+# git status
+# docker ps"></textarea>
     </section>
   </main>
+  <script>
+    (function () {
+      var ENDPOINT = "/cgi-bin/general_commands.py";
+      var textArea = document.getElementById("generalCommands");
+      var saveBtn = document.getElementById("saveGeneralBtn");
+      var clearBtn = document.getElementById("clearGeneralBtn");
+      var status = document.getElementById("generalStatus");
+
+      function setStatus(text) {
+        status.textContent = text;
+      }
+
+      async function saveGeneralCommands() {
+        try {
+          var res = await fetch(ENDPOINT, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ content: textArea.value })
+          });
+          if (!res.ok) {
+            setStatus("Save failed");
+            return;
+          }
+          setStatus("Saved to file");
+        } catch (e) {
+          setStatus("Save failed (run server with --cgi)");
+        }
+      }
+
+      async function loadGeneralCommands() {
+        try {
+          var res = await fetch(ENDPOINT, { method: "GET" });
+          if (!res.ok) {
+            setStatus("Load failed (run server with --cgi)");
+            return;
+          }
+          var data = await res.json();
+          if (data && typeof data.content === "string") {
+            textArea.value = data.content;
+          }
+        } catch (e) {
+          setStatus("Load failed (run server with --cgi)");
+        }
+      }
+
+      var autoSave = function () {
+        setStatus("Typing...");
+        clearTimeout(autoSave._timer);
+        autoSave._timer = setTimeout(saveGeneralCommands, 500);
+      };
+
+      saveBtn.addEventListener("click", saveGeneralCommands);
+      textArea.addEventListener("input", autoSave);
+      clearBtn.addEventListener("click", function () {
+        textArea.value = "";
+        saveGeneralCommands();
+        setStatus("Cleared");
+      });
+
+      loadGeneralCommands();
+      setStatus("Ready");
+    })();
+  </script>
 </body>
 </html>
