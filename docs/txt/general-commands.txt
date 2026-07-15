@@ -1,3 +1,3 @@
 mvn clean package -DskipTests=true ---: Build without test cases
 https://literate-space-telegram-r7ggvp5r59vpf5jw5-8000.app.github.dev/docs/ ---: Git URL 10/07/2026
-jdbc:h2:mem:smartoffice ---: H2 database name used on 10July2026 
+/h2-console -> jdbc:h2:mem:smartoffice ---: H2 database name used on 10July2026 

@@ -25,6 +25,34 @@
         <li>Kafka event flow and audit service</li>
         <li>Redis caching strategy</li>
       </ul>
+
+      <h2>Implemented in This Phase (Current Slice)</h2>
+      <ul>
+        <li>Employee service module with secure CRUD-lite endpoints</li>
+        <li>Attendance service module with secure mark and query endpoints</li>
+        <li>Leave service module with secure request and approval flow</li>
+        <li>End-to-end integration test that validates employee -> attendance -> leave approval flow</li>
+      </ul>
+
+      <h2>Phase 03 Endpoints Added</h2>
+      <ul>
+        <li><code>POST /api/v1/employees</code> (MANAGER/ADMIN)</li>
+        <li><code>GET /api/v1/employees</code> (MANAGER/ADMIN)</li>
+        <li><code>GET /api/v1/employees/{id}</code> (EMPLOYEE/MANAGER/ADMIN)</li>
+        <li><code>POST /api/v1/attendance/mark</code> (MANAGER/ADMIN)</li>
+        <li><code>GET /api/v1/attendance/employee/{employeeId}</code> (EMPLOYEE/MANAGER/ADMIN)</li>
+        <li><code>POST /api/v1/leaves</code> (EMPLOYEE/MANAGER/ADMIN)</li>
+        <li><code>GET /api/v1/leaves</code> (MANAGER/ADMIN)</li>
+        <li><code>POST /api/v1/leaves/{id}/approve</code> (MANAGER/ADMIN)</li>
+        <li><code>POST /api/v1/leaves/{id}/reject</code> (MANAGER/ADMIN)</li>
+      </ul>
+
+      <h2>Pending from Original Phase 03 Scope</h2>
+      <ul>
+        <li>API Gateway integration (to be implemented in subsequent slice)</li>
+        <li>Kafka audit events (planned with Phase 04 event architecture)</li>
+        <li>Redis caching strategy beyond security-state usage</li>
+      </ul>
     </section>
   </main>
 </body>
